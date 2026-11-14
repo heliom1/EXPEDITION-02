@@ -36,3 +36,11 @@ browser master plan §1.1. Nothing below overrides it.
 `Assets/Cinderfall/Resources/Story/story.json` (from the earlier Unity attempt) states that an expedition astronaut
 "has disappeared" and frames the mission as a rover recovery. That premise is **not** in the user's overview, so it is
 not used. If the fuller story confirms it, it can be adopted.
+
+## Added in 0.2.0 (all **draft**)
+| Record | Notes |
+|---|---|
+| Survey Beacon B-5 | Beacons show the first expedition reached the cave; who placed them is an OPEN STORY DECISION |
+| Expedition 1 Sample Case | Optional; samples never archived; why it was left is an OPEN STORY DECISION |
+| Deposit Analysis | Water ice identification uses real spectral bands (1.5/2.0 µm); thickness/temperature are gameplay values |
+| Transmission Sent | Ends the slice on the conflict between the cave route and the official report — no answer given |

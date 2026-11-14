@@ -43,7 +43,7 @@ export interface MenuHandlers {
 }
 
 const CONTROLS: Array<[string, string]> = [
-  ['Move', 'W A S D'], ['Look', 'Mouse'], ['Sprint', 'Shift'], ['Jump', 'Space'], ['Interact', 'E'],
+  ['Move', 'W A S D'], ['Look', 'Mouse'], ['Sprint', 'Shift'], ['Jump', 'Space'], ['Interact', 'E'], ['Suit lamp', 'F'],
   ['PDA (map, objectives, logs)', 'Tab'], ['Tool bar', '1 – 5'], ['Pause / release mouse', 'Esc'], ['Developer overlay', 'F3'],
 ];
 
@@ -52,6 +52,8 @@ export class MainMenu {
   readonly el: HTMLElement;
   private sheet: HTMLElement;
   private continueBtn: HTMLButtonElement;
+  private newBtn: HTMLButtonElement;
+  private saveInfo: HTMLElement;
 
   constructor(parent: HTMLElement, private settings: Settings, private readonly handlers: MenuHandlers) {
     this.sheet = h('div.sheet.panel.interactive.hidden');
@@ -59,10 +61,13 @@ export class MainMenu {
       h<'button'>('button' + (primary ? '.primary' : ''), { onclick: fn }, h('span.ico', null, icon), label);
     this.continueBtn = item('▶', 'Continue', () => handlers.onContinue());
     this.continueBtn.disabled = true;
-    this.continueBtn.title = 'Saving arrives in a later build';
+    this.continueBtn.title = 'No saved game yet';
+    this.saveInfo = h('div', { style: { fontSize: '12px', color: 'var(--muted)', padding: '0 16px 8px 42px', marginTop: '-2px' } });
+    this.newBtn = item('▷', 'New Game', () => handlers.onNewGame(), true);
     const items = h('div.items.interactive', null,
       this.continueBtn,
-      item('▷', 'New Game', () => handlers.onNewGame(), true),
+      this.saveInfo,
+      this.newBtn,
       item('⚙', 'Settings', () => this.showSettings()),
       item('⌨', 'Controls', () => this.showControls()),
       item('ⓘ', 'Credits', () => this.showCredits()),
@@ -71,9 +76,18 @@ export class MainMenu {
       h('div.left', null, wordmark(), items),
       this.sheet,
       h('div.footer', null, 'The Red Planet Awaits…'),
-      h('div.build', null, 'Vertical slice · v0.1 · Browser build'),
+      h('div.build', null, 'Vertical slice · v0.2 · Browser build'),
     );
     parent.append(this.el);
+  }
+
+  /** Enables Continue when a save exists; `detail` describes it (or why it could not be read). */
+  setSave(available: boolean, detail: string): void {
+    this.continueBtn.disabled = !available;
+    this.continueBtn.classList.toggle('primary', available);
+    this.newBtn.classList.toggle('primary', !available);
+    this.continueBtn.title = available ? 'Continue from your last save' : 'No saved game';
+    this.saveInfo.textContent = detail;
   }
 
   show(on: boolean): void {
@@ -112,8 +126,12 @@ export class MainMenu {
       return b;
     };
     q.append(mkQ('high', 'High'), mkQ('low', 'Low'));
+    const vol = h<'input'>('input', { type: 'range', min: '0', max: '1', step: '0.05', value: String(s.volume) });
+    const volVal = h('span', null, `${Math.round(s.volume * 100)}%`);
+    vol.addEventListener('input', () => { s.volume = parseFloat(vol.value); volVal.textContent = `${Math.round(s.volume * 100)}%`; this.handlers.onSettings(s); });
     this.open('SETTINGS',
       h('div.row', null, 'Mouse sensitivity', h('span', null, sens, ' ', sensVal)),
+      h('div.row', null, 'Volume', h('span', null, vol, ' ', volVal)),
       h('div.row', null, 'Invert mouse Y', inv),
       h('div.row', null, 'Graphics quality', q),
       h('p', { style: { color: 'var(--muted)', fontSize: '12.5px', marginTop: '12px' } }, 'Low: no sun shadows, 1× pixel ratio, shorter high-detail terrain radius.'),

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { WorldData, type WorldMeta } from '../src/world/worldData';
 import { ColliderSet } from '../src/world/colliders';
 import { PlayerController } from '../src/player/controller';
+import { Ground } from '../src/cave/ground';
 import { MissionState, OBJECTIVES } from '../src/missions/missions';
 import { events } from '../src/core/events';
 import { SuitSystem } from '../src/player/suit';
@@ -30,10 +31,11 @@ const keys = (held: string[]): Input => ({
   down: (c: string) => held.includes(c), consume: () => false, takeMouse: () => [0, 0],
 } as unknown as Input);
 const noRocks = { collidersNear: (_x: number, _z: number, out: unknown[]) => { out.length = 0; } } as unknown as RockField;
+const mkPlayer = (c: ColliderSet) => { const w = makeWorld(); return new PlayerController(w, c, noRocks, new Ground(w)); };
 
 describe('PlayerController', () => {
   it('walks on flat ground at walking speed and stays grounded', () => {
-    const p = new PlayerController(makeWorld(), new ColliderSet(), noRocks);
+    const p = mkPlayer(new ColliderSet());
     p.teleport(-40, 0, Math.PI / 2); // facing -X (west)
     for (let i = 0; i < 120; i++) p.step(1 / 60, keys(['KeyW']));
     expect(p.grounded).toBe(true);
@@ -43,7 +45,7 @@ describe('PlayerController', () => {
   });
 
   it('cannot climb a slope steeper than the limit', () => {
-    const p = new PlayerController(makeWorld(), new ColliderSet(), noRocks);
+    const p = mkPlayer(new ColliderSet());
     p.teleport(-6, 0, -Math.PI / 2); // facing +X, towards the 60° ramp
     for (let i = 0; i < 600; i++) p.step(1 / 60, keys(['KeyW', 'ShiftLeft']));
     expect(p.pos.y).toBeLessThan(2);
@@ -52,14 +54,14 @@ describe('PlayerController', () => {
   it('is pushed out of structure colliders', () => {
     const c = new ColliderSet();
     c.add(-30, 0, 3, -10, 10);
-    const p = new PlayerController(makeWorld(), c, noRocks);
+    const p = mkPlayer(c);
     p.teleport(-40, 0, -Math.PI / 2); // walk east into the cylinder
     for (let i = 0; i < 300; i++) p.step(1 / 60, keys(['KeyW']));
     expect(Math.hypot(p.pos.x + 30, p.pos.z)).toBeGreaterThanOrEqual(3 + 0.38 - 1e-3);
   });
 
   it('reports compass heading with north = +Z, east = +X', () => {
-    const p = new PlayerController(makeWorld(), new ColliderSet(), noRocks);
+    const p = mkPlayer(new ColliderSet());
     p.yaw = Math.PI; expect(p.heading).toBeCloseTo(0, 3);
     p.yaw = -Math.PI / 2; expect(p.heading).toBeCloseTo(90, 3);
   });

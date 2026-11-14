@@ -4,6 +4,7 @@ import type { Input } from '../core/input';
 import type { WorldData } from '../world/worldData';
 import type { ColliderSet } from '../world/colliders';
 import type { RockCollider, RockField } from '../world/rocks';
+import type { Ground } from '../cave/ground';
 
 const EYE = 1.65;
 const RADIUS = 0.38;
@@ -34,11 +35,15 @@ export class PlayerController {
   private rocks: RockCollider[] = [];
   /** Metres fallen in the last landing (for feedback / damage). */
   lastLandingSpeed = 0;
+  /** True while in cave air under the hillside. */
+  inCave = false;
+  /** Distance walked (for footstep audio). */
+  stride = 0;
 
-  constructor(private readonly world: WorldData, private readonly colliders: ColliderSet, private readonly rockField: RockField) {}
+  constructor(private readonly world: WorldData, private readonly colliders: ColliderSet, private readonly rockField: RockField, private readonly ground: Ground) {}
 
-  teleport(x: number, z: number, yaw: number): void {
-    this.pos.set(x, this.world.heightAt(x, z), z);
+  teleport(x: number, z: number, yaw: number, yHint?: number): void {
+    this.pos.set(x, yHint === undefined ? this.world.heightAt(x, z) : this.ground.at(x, z, yHint).h, z);
     this.prevPos.copy(this.pos);
     this.vel.set(0, 0, 0);
     this.yaw = yaw;
@@ -78,7 +83,7 @@ export class PlayerController {
     this.vel.y -= GRAVITY * dt;
 
     // Slope limit: remove the uphill component on terrain steeper than MAX_SLOPE.
-    const ahead = this.world.normalAt(this.pos.x + this.vel.x * 0.15, this.pos.z + this.vel.z * 0.15, 0.8);
+    const ahead = this.ground.at(this.pos.x + this.vel.x * 0.15, this.pos.z + this.vel.z * 0.15, this.pos.y + 0.3).n;
     if (ahead[1] < MAX_SLOPE) {
       const nx = ahead[0], nz = ahead[2], nl = Math.hypot(nx, nz) || 1;
       const into = (this.vel.x * nx + this.vel.z * nz) / nl;
@@ -87,13 +92,15 @@ export class PlayerController {
 
     this.pos.addScaledVector(this.vel, dt);
     this.resolveColliders();
+    if (this.ground.resolveWalls(this.pos, RADIUS, EYE + 0.15) && this.vel.y > 0) this.vel.y = 0;
 
     const e = this.world.meta.extent - 6;
     this.pos.x = Math.max(-e, Math.min(e, this.pos.x));
     this.pos.z = Math.max(-e, Math.min(e, this.pos.z));
 
-    const ground = this.world.heightAt(this.pos.x, this.pos.z);
-    const n = this.world.normalAt(this.pos.x, this.pos.z, 0.6);
+    const hit = this.ground.at(this.pos.x, this.pos.z, this.pos.y);
+    const ground = hit.h;
+    const n = hit.n;
     if (this.pos.y <= ground || (this.grounded && this.vel.y <= 0 && this.pos.y - ground < STEP_SNAP)) {
       if (!this.grounded) this.lastLandingSpeed = -this.vel.y;
       this.pos.y = ground;
@@ -111,9 +118,11 @@ export class PlayerController {
     // Fall/NaN recovery.
     if (!Number.isFinite(this.pos.x + this.pos.y + this.pos.z) || this.pos.y < ground - 3) {
       this.pos.set(Number.isFinite(this.prevPos.x) ? this.prevPos.x : 0, 0, Number.isFinite(this.prevPos.z) ? this.prevPos.z : 0);
-      this.pos.y = this.world.heightAt(this.pos.x, this.pos.z);
+      this.pos.y = this.ground.at(this.pos.x, this.pos.z, this.prevPos.y + 1).h;
       this.vel.set(0, 0, 0);
     }
+    this.inCave = this.ground.insideCave(this.pos.x, this.pos.y + 1, this.pos.z);
+    if (this.grounded) this.stride += Math.hypot(this.pos.x - this.prevPos.x, this.pos.z - this.prevPos.z);
 
     if (this.grounded && this.moving) this.bob += dt * (this.sprinting ? 9.5 : 6.5);
   }
@@ -146,7 +155,7 @@ export class PlayerController {
     const amp = this.sprinting ? 0.05 : 0.03;
     cam.position.y += EYE + Math.sin(this.bob * 2) * amp * (this.moving && this.grounded ? 1 : 0);
     // Never let the near plane dip into steep ground in front of the eye.
-    const g = this.world.heightAt(cam.position.x, cam.position.z) + 0.35;
+    const g = this.ground.at(cam.position.x, cam.position.z, cam.position.y - 0.4).h + 0.35;
     if (cam.position.y < g) cam.position.y = g;
     cam.rotation.order = 'YXZ';
     cam.rotation.set(this.pitch, this.yaw, 0);

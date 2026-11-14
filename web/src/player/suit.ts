@@ -12,9 +12,9 @@ export class SuitSystem {
   private warned = { o2: false, o2crit: false, pwr: false };
 
   /** Full oxygen lasts ~22 minutes walking; suit power ~30 minutes. */
-  update(dt: number, sprinting: boolean): 'ok' | 'failed' {
+  update(dt: number, sprinting: boolean, lamp = false): 'ok' | 'failed' {
     const o2Rate = 100 / (22 * 60) * (sprinting ? 1.6 : 1);
-    const pwrRate = 100 / (30 * 60) * (sprinting ? 2 : 1);
+    const pwrRate = 100 / (30 * 60) * (sprinting ? 2 : 1) * (lamp ? 1.4 : 1);
     this.oxygen = Math.max(0, this.oxygen - o2Rate * dt);
     this.power = Math.max(0, this.power - pwrRate * dt);
     if (this.oxygen <= 0) this.health = Math.max(0, this.health - 4 * dt);

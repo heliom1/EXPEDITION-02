@@ -2,6 +2,7 @@ import { BufferGeometry, Color, DynamicDrawUsage, IcosahedronGeometry, Instanced
 import type { WorldData } from './worldData';
 import type { LayerTextures } from '../rendering/textures';
 import { mulberry32 } from './random';
+import { caveSdf, nearCave } from '../cave/caveDef';
 
 export interface RockCollider { x: number; z: number; r: number; top: number }
 
@@ -100,6 +101,7 @@ export class RockField {
       for (let i = 0; i < n; i++) {
         const x = x0 + (i + rnd()) * cellSize, z = z0 + (j + rnd()) * cellSize;
         if (!w.inside(x, z, 4)) { rnd(); continue; }
+        if (nearCave(x, z) && caveSdf(x, w.heightAt(x, z), z, false) < 1.5) continue; // keep the cave mouth clear
         const [, dark, bed, , grav] = w.splatAt(x, z);
         const cluster = 0.5 + 0.5 * Math.sin(x * 0.043 + Math.sin(z * 0.031) * 2.1) * Math.sin(z * 0.051 + Math.sin(x * 0.027) * 1.7);
         const base = 0.012 + 0.22 * grav + 0.12 * bed + 0.03 * dark;
@@ -134,7 +136,7 @@ export class RockField {
 }
 
 /** Irregular rock: displaced icosahedron with a few planar fractures, flat-shaded. */
-function makeRockGeometry(seed: number): BufferGeometry {
+export function makeRockGeometry(seed: number): BufferGeometry {
   const rnd = mulberry32(seed);
   const g = new IcosahedronGeometry(1, 1);
   const pos = g.getAttribute('position');

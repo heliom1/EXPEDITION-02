@@ -1,7 +1,9 @@
 import { BufferAttribute, BufferGeometry, Group, Mesh, MeshStandardMaterial, Vector4 } from 'three';
 import type { WorldData } from './worldData';
 import type { LayerTextures } from '../rendering/textures';
-import { createTerrainMaterial, makeSplatTexture } from './terrainMaterial';
+import { createTerrainDepthMaterial, createTerrainMaterial, makeSplatTexture } from './terrainMaterial';
+
+const DEPTH = createTerrainDepthMaterial();
 
 export const CHUNK_SIZE = 256;
 const COARSE_SEGS = 64; // 16 m spacing for whole far tiles
@@ -213,6 +215,7 @@ export class Terrain {
     g.computeBoundingSphere();
     g.computeBoundingBox();
     const mesh = new Mesh(g, material);
+    mesh.customDepthMaterial = DEPTH;
     mesh.receiveShadow = true;
     mesh.matrixAutoUpdate = false;
     return mesh;

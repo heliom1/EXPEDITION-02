@@ -1,5 +1,6 @@
-import { DataTexture, LinearFilter, MeshStandardMaterial, RGBAFormat, Texture, UnsignedByteType, Vector4 } from 'three';
+import { DataTexture, LinearFilter, MeshDepthMaterial, MeshStandardMaterial, RGBADepthPacking, RGBAFormat, Texture, UnsignedByteType, Vector4 } from 'three';
 import type { LayerTextures } from '../rendering/textures';
+import { CAVE_GLSL } from '../cave/caveGlsl';
 
 /**
  * Terrain shading: per-tile CinderRain splat weights blend five tileable ground layers
@@ -84,10 +85,26 @@ export function createTerrainMaterial(layers: LayerTextures, splat: Texture | nu
       .replace('#include <common>', '#include <common>\nvarying vec3 vCfWorld;\nvarying vec3 vCfNormal;')
       .replace('#include <begin_vertex>', '#include <begin_vertex>\nvCfWorld = (modelMatrix * vec4(transformed, 1.0)).xyz;\nvCfNormal = normalize(mat3(modelMatrix) * objectNormal);');
     shader.fragmentShader = shader.fragmentShader
-      .replace('#include <common>', `#include <common>\n${COMMON}`)
+      .replace('#include <common>', `#include <common>\n${COMMON}\n${CAVE_GLSL}`)
+      .replace('#include <clipping_planes_fragment>', '#include <clipping_planes_fragment>\nif (cfCaveMouth(vCfWorld) < -0.35) discard; // cave entrance')
       .replace('#include <map_fragment>', MAP)
       .replace('#include <normal_fragment_begin>', `#include <normal_fragment_begin>\n${NORMAL}`);
   };
-  m.customProgramCacheKey = () => 'cf-terrain-v1';
+  m.customProgramCacheKey = () => 'cf-terrain-v2';
+  return m;
+}
+
+/** Shadow-pass material for terrain that also cuts the cave entrance, so sunlight can enter it. */
+export function createTerrainDepthMaterial(): MeshDepthMaterial {
+  const m = new MeshDepthMaterial({ depthPacking: RGBADepthPacking });
+  m.onBeforeCompile = (shader) => {
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\nvarying vec3 vCfWorld;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvCfWorld = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', `#include <common>\nvarying vec3 vCfWorld;\n${CAVE_GLSL}`)
+      .replace('#include <clipping_planes_fragment>', '#include <clipping_planes_fragment>\nif (cfCaveMouth(vCfWorld) < -0.35) discard;');
+  };
+  m.customProgramCacheKey = () => 'cf-terrain-depth-v1';
   return m;
 }

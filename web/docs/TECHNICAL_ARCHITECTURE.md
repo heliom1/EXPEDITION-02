@@ -53,3 +53,25 @@ Settings only (localStorage). Game saves (IndexedDB, versioned) are Phase 18.
 
 ## Lifecycle
 Resize handled; WebGL context loss shows a reload message; chunk geometries are disposed on unload.
+
+## Cave (`src/cave/`)
+- `caveDef.ts` — single source of truth: node/segment layout, chambers, a signed distance field (capsules + chambers,
+  smooth union, warped-sinusoid wall noise, flat rubble floor), floor search, gradient, depth factor. No three.js import.
+- `caveMesher.ts` (+ `caveMesher.worker.ts`) — surface nets on a 0.7 m grid; coarse pre-pass so only ~18% of samples are
+  evaluated exactly; seals the domain; drops triangles above the hillside; normals from the SDF gradient; baked AO.
+- `caveGlsl.ts` — GLSL generated from `caveDef.ts`: `cfCaveMouth` (terrain + terrain-shadow discard at the entrance) and
+  `cfCaveDepth`; `patchCaveLighting` replaces three's `lights_fragment_begin` chunk so directional and hemisphere light are
+  scaled by daylight visibility while point/spot lights (suit lamp, survey lamp) are not. The patch throws if three's
+  chunk text changes, so an upgrade cannot silently break it.
+- `ground.ts` — unified walkable surface: heightfield unless the mouth cuts it, cave floor inside the hill; cave walls and
+  ceilings push the player capsule. Used by the controller and the camera clip guard.
+- `cave.ts` — mesh/material, ice, beacons, Expedition 1 props, debris, talus; interactable anchors.
+
+## Saves (`src/save/saveSystem.ts`)
+IndexedDB `cinderfall2/saves/slot1`. Schema `SAVE_VERSION = 2`; `MIGRATIONS[n]` upgrades n → n+1; `validate()` checks ranges
+and types; unreadable data → "corrupt" status shown on the menu, never a crash. Autosave every 30 s of play, on objective
+and record changes, on pause, tab hide and page hide. A running drill is restored as idle (restart required).
+
+## Audio (`src/audio/audio.ts`)
+WebAudio graph created on the first user gesture. All sounds are synthesised: wind (low-passed noise), suit hum, breathing,
+footsteps driven by distance walked, cave rumble/drips, convolution reverb from a generated impulse, HRTF-panned drill.

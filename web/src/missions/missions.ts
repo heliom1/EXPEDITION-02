@@ -35,6 +35,24 @@ export const OBJECTIVES: Objective[] = [
     description: 'Radar shows a void under the escarpment west of DRL-2. Find it.',
     target: { x: SITES.cave.x, z: SITES.cave.z, label: 'Cliff base' },
   },
+  {
+    id: 'cave',
+    title: "Follow the first expedition's beacons",
+    description: 'Explore the cave. Use your suit lamp [F]. Follow the survey beacons to the last one.',
+    target: { x: SITES.cave.x, z: SITES.cave.z, label: 'Last beacon' },
+  },
+  {
+    id: 'ice',
+    title: 'Analyse the deposit',
+    description: 'Something in the lower chamber is reflecting your lamp. Scan it.',
+    target: { x: SITES.cave.x, z: SITES.cave.z, label: 'Deposit' },
+  },
+  {
+    id: 'report',
+    title: 'Report the discovery',
+    description: 'Return to the outpost terminal and transmit your findings.',
+    target: { x: SITES.outpost.x, z: SITES.outpost.z, label: 'Terminal' },
+  },
 ];
 
 export class MissionState {
@@ -51,6 +69,15 @@ export class MissionState {
     if (this.records.includes(id)) return;
     this.records.push(id);
     events.emit('record', { id });
+  }
+
+  /** Restores progress from a save (does not emit events). */
+  restore(index: number, records: string[], flags: string[]): void {
+    this.index = Math.max(0, Math.min(OBJECTIVES.length, index));
+    this.complete = this.index >= OBJECTIVES.length;
+    this.records.splice(0, this.records.length, ...records.filter((r) => typeof r === 'string'));
+    this.flags.clear();
+    flags.forEach((f) => this.flags.add(f));
   }
 
   /** Completes the current objective if it matches `id`. */

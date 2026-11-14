@@ -22,8 +22,10 @@ The surface is the team's **CinderRain** terrain (6.1 km × 6.1 km, 2 m heightfi
 | `npm run e2e` | Headless end-to-end mission run (needs dev server running; pass a URL to test preview: `node tools/e2e.mjs http://localhost:4173/`) |
 
 ## Controls
-W A S D move · mouse look · Shift sprint · Space jump · E interact · Tab PDA · 1–5 tool bar · Esc pause · F3 developer overlay
-(with F3 open: F5 outpost, F6 rover, F7 drill site, F8 cliff base teleports).
+W A S D move · mouse look · Shift sprint · Space jump · E interact · F suit lamp · Tab PDA · 1–5 tool bar · Esc pause · F3 developer overlay
+(with F3 open: F5 outpost, F6 rover, F7 drill site, F8 cave mouth, F9 cave hall, F10 ice chamber).
+
+Progress saves automatically (IndexedDB in your browser); use **Continue** on the main menu.
 
 ## Adding your models
 Export to glTF binary and drop them into `public/assets/models/` as `outpost.glb`, `rover.glb`, `drill.glb`

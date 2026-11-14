@@ -9,7 +9,8 @@ export const SITES = {
   reactor: { x: -1335, z: 1225 },
   rover: { x: 150, z: 900 },
   drill: { x: -20, z: -320 },
-  cave: { x: -190, z: -305 },
+  /** Just outside the cave entrance in the mesa's north face. */
+  cave: { x: -208, z: -314 },
 } as const;
 export type SiteId = keyof typeof SITES;
 
