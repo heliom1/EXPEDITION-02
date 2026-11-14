@@ -49,7 +49,7 @@ wheel-raycast model on the same heightfield (Phase 11).
 only on finest-LOD chunks, density from gravel/bedrock weights + talus below steep ground + clustered noise, power-law sizes.
 
 ## Persistence
-Settings only (localStorage). Game saves (IndexedDB, versioned) are Phase 18.
+Settings in localStorage (viewer preferences); game progress in IndexedDB — see Saves below.
 
 ## Lifecycle
 Resize handled; WebGL context loss shows a reload message; chunk geometries are disposed on unload.
