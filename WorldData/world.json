@@ -1,0 +1,19 @@
+{
+  "source": "C:\\Users\\USER\\Documents\\CinderRain\\data",
+  "extent": 3072.0,
+  "cell": 2.0,
+  "tile": 1024.0,
+  "tilesPerSide": 6,
+  "tileRes": 513,
+  "alphaRes": 512,
+  "heightBase": -220.0,
+  "heightSize": 480.0,
+  "backdrop": {
+    "res": 257,
+    "extent": 14336.0,
+    "base": -400.0,
+    "size": 900.0
+  },
+  "minHeight": -155.00328063964844,
+  "maxHeight": 203.979736328125
+}

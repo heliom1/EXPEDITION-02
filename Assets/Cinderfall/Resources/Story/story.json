@@ -1,0 +1,56 @@
+{
+  "title": "CINDERFALL 2",
+  "setting": "Mars, 2043",
+  "intro": "MARS, 2043.\n\nTen years after humanity first set foot on Mars. A decade of rapid advances in space technology has turned short visits into a growing effort toward a lasting human presence beyond Earth.\n\nAn expedition astronaut has disappeared. Their rover has gone silent on the plain east of the outpost.\n\nYou are sent to recover it, and to find out what happened.",
+  "endOfContent": "You have reached the end of the current build.\n\nThe discovery of subsurface water ice has been transmitted.\n\nWhat happened to the missing astronaut is an OPEN STORY DECISION that will be resolved by the authoritative story.",
+  "objectives": [
+    { "id": "obj_checkin", "title": "Report to the outpost terminal", "description": "Use the mission terminal at the outpost to begin the recovery assignment.", "completeFlag": "outpost.checkin", "marker": "outpost_terminal", "onCompleteLog": "mission_brief" },
+    { "id": "obj_find_rover", "title": "Locate the expedition rover", "description": "Follow the rover's last recorded beacon position east across the plain. Check the PDA map [TAB].", "completeFlag": "rover.found", "marker": "rover", "onCompleteLog": "" },
+    { "id": "obj_restore_rover", "title": "Restore rover power", "description": "The rover is dead. Reconnect its main battery at the rear service panel.", "completeFlag": "rover.powered", "marker": "rover_panel", "onCompleteLog": "" },
+    { "id": "obj_read_diary", "title": "Recover the astronaut's diary", "description": "A personal log device is mounted in the rover cab.", "completeFlag": "log.diary_01", "marker": "diary_01", "onCompleteLog": "" },
+    { "id": "obj_drill_site", "title": "Drive to the drill site", "description": "The diary references a drilling survey west of the crater rim. Take the rover.", "completeFlag": "drill.site_reached", "marker": "drill_site", "onCompleteLog": "" },
+    { "id": "obj_run_drill", "title": "Complete the core sample", "description": "Restart the drilling machine from its console and wait for the core analysis.", "completeFlag": "drill.complete", "marker": "drill_console", "onCompleteLog": "core_analysis" },
+    { "id": "obj_find_cave", "title": "Find the void beneath the escarpment", "description": "Radar shows a void under the spillway cliffs to the south-south-east. Search the cliff base.", "completeFlag": "cave.entered", "marker": "cave_mouth", "onCompleteLog": "" },
+    { "id": "obj_explore_cave", "title": "Follow the survey beacons", "description": "Explore the cave system. Use your suit lamp [F].", "completeFlag": "cave.ice_chamber", "marker": "ice_chamber", "onCompleteLog": "" },
+    { "id": "obj_sample_ice", "title": "Analyse the deposit", "description": "Scan the deposit in the lower chamber.", "completeFlag": "ice.sampled", "marker": "ice_deposit", "onCompleteLog": "ice_discovery" },
+    { "id": "obj_report", "title": "Report the discovery", "description": "Return to the outpost terminal and transmit your findings.", "completeFlag": "outpost.report", "marker": "outpost_terminal", "onCompleteLog": "" }
+  ],
+  "logs": [
+    {
+      "id": "mission_brief", "type": "mission", "title": "Assignment: Rover Recovery", "author": "Mission Control", "stamp": "2043", "placeholder": true,
+      "body": "Recover the expedition rover. Its last beacon fix places it on the plain roughly 1.4 km east of this outpost.\n\nInvestigate the disappearance of the expedition astronaut. Record any evidence you find: equipment, tracks, personal logs.\n\nYour suit carries oxygen and power for an extended excursion. Recharge at the outpost suit station or the rover.\n\n[OPEN STORY DECISION: crew names, mission chronology and the circumstances of the disappearance will come from the authoritative story.]"
+    },
+    {
+      "id": "clue_tracks", "type": "clue", "title": "Wheel tracks", "author": "Field observation", "stamp": "", "placeholder": false,
+      "body": "Rover tracks heading east, softened by wind-blown dust. Days old, not hours.\n\nA sealed sample bag lies beside them. The label carries a survey grid reference and the code DRL-2."
+    },
+    {
+      "id": "diary_01", "type": "diary", "title": "Personal log: channel readings", "author": "Expedition astronaut [NAME: OPEN STORY DECISION]", "stamp": "[DATE: OPEN STORY DECISION]", "placeholder": true,
+      "body": "Neutron spectrometer counts along the channel floor keep climbing to the south-west. A hydrogen signal this strong, this shallow, should not be here.\n\nI am taking the drill to the survey point west of the crater rim, DRL-2, to pull a core. If the readings hold, there is something under the spillway cliffs.\n\n[Draft gameplay text. Replace with the authoritative diary when supplied.]"
+    },
+    {
+      "id": "clue_flag", "type": "clue", "title": "Survey flag", "author": "Field observation", "stamp": "", "placeholder": false,
+      "body": "A survey marker planted beside the track. Its tag reads DRL-2 with an arrow pointing south-west, toward the channel."
+    },
+    {
+      "id": "diary_02", "type": "diary", "title": "Personal log: DRL-2", "author": "Expedition astronaut [NAME: OPEN STORY DECISION]", "stamp": "[DATE: OPEN STORY DECISION]", "placeholder": true,
+      "body": "The core came up as layered sediment, then the bit hit something that did not behave like rock. Torque spike, temperature drop.\n\nThe radar shows a void at the base of the escarpment. I am going on foot to look. Leaving survey beacons along the way.\n\n[Draft gameplay text. Replace with the authoritative diary when supplied.]"
+    },
+    {
+      "id": "core_analysis", "type": "discovery", "title": "Core analysis: DRL-2", "author": "Drill telemetry", "stamp": "", "placeholder": false,
+      "body": "0.0 - 3.1 m: layered sulfate-bearing sediment, fine grained.\n3.1 m: torque spike; sample temperature anomaly.\nSpectral match: water ice cementing the pore space.\n\nGround-penetrating radar: large subsurface void approximately 550 m south-south-east, beneath the spillway escarpment."
+    },
+    {
+      "id": "clue_beacon", "type": "clue", "title": "Survey beacon", "author": "Field observation", "stamp": "", "placeholder": false,
+      "body": "A survey beacon, still blinking. Its internal log shows it was deployed after the DRL-2 drill run.\n\nThe next beacon in the sequence is registered at the base of the cliff."
+    },
+    {
+      "id": "clue_cave_case", "type": "clue", "title": "Equipment case", "author": "Field observation", "stamp": "", "placeholder": true,
+      "body": "An equipment case set down on a ledge. Inside: empty core tubes and a handheld scanner whose survey log ends mid-traverse, pointing deeper into the cave.\n\n[OPEN STORY DECISION: what the scanner log reveals about the missing astronaut.]"
+    },
+    {
+      "id": "ice_discovery", "type": "discovery", "title": "Subsurface water ice", "author": "Suit spectrometer", "stamp": "", "placeholder": false,
+      "body": "Massive water ice, clean and finely layered with dust bands, exposed in the wall and floor of the lower chamber. Thickness exceeds the scanner's range.\n\nProtected from sunlight and sublimation by the rock above, it has survived here for a very long time.\n\nWater on this scale means drinking water, oxygen and propellant made on Mars, and a real chance at a lasting human presence."
+    }
+  ]
+}
