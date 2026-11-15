@@ -1,0 +1,8 @@
+{
+  "_comment": "Cinematic background beds + stings. Generated to public/assets/audio/music/<id>.mp3 by tools/generate-sfx.mjs (ElevenLabs sound effects). Played under the procedural suit/wind sound and ducked under dialogue.",
+  "beds": [
+    { "id": "bed_surface", "loop": true, "duration": 22, "gain": 0.32, "prompt": "Cinematic ambient drone for a vast lonely Mars desert: deep sub-bass hum, slow evolving warm analog synth pad, faint thin distant wind, sparse and spacious, no percussion, no melody, seamless loop" },
+    { "id": "bed_cave", "loop": true, "duration": 22, "gain": 0.38, "prompt": "Mysterious underground ice cave ambience: low resonant drone, glassy shimmering crystal tones, occasional distant water drips, long reverb, eerie but beautiful, no percussion, seamless loop" },
+    { "id": "sting_discovery", "loop": false, "duration": 5, "gain": 0.5, "prompt": "Short cinematic scientific discovery sting: soft rising orchestral swell with shimmering bell chime resolving to a warm chord, awe and wonder" }
+  ]
+}

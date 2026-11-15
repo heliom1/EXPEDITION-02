@@ -1,0 +1,37 @@
+﻿[
+    {
+        "Name":  "Communications.glb",
+        "Bytes":  23612252,
+        "Sha256":  "8798A8AFBDB7BC12350E2BC26CCF412AE0B5EA5B683969FF91D17642E055343D"
+    },
+    {
+        "Name":  "drill.glb",
+        "Bytes":  17374060,
+        "Sha256":  "D204F0C2787F2E60F5BF3A8B652FCC37303E190DA546249FCF99F6EC3A9F2FB9"
+    },
+    {
+        "Name":  "Farm.glb",
+        "Bytes":  28653632,
+        "Sha256":  "B0F88602FB5EB20524B6520CC9EDDE5032B3538798B6047CB65B57FBC2514353"
+    },
+    {
+        "Name":  "main base (1).glb",
+        "Bytes":  403339532,
+        "Sha256":  "80E6D37A808DE667A6ED0D358EC413F7BB666880382823E7090E354FA03616F9"
+    },
+    {
+        "Name":  "mercenary_astronaut.glb",
+        "Bytes":  500419044,
+        "Sha256":  "DF72C7EF081AFB4ADF6CF9C041F912B770929860C7BF97EDD76C6DEB45577A1C"
+    },
+    {
+        "Name":  "ROVER.glb",
+        "Bytes":  10506152,
+        "Sha256":  "2D121E65218183FA0BB4429AE1981D7F50E5D2AAD326E166EAB1EB53B8379070"
+    },
+    {
+        "Name":  "VEHICLE.glb",
+        "Bytes":  702048,
+        "Sha256":  "5F6898AAEE9AAEFB1965E6DD7AADF7F16468F13594C19BAF1B41BD0348D4FAD1"
+    }
+]

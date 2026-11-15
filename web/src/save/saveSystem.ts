@@ -1,8 +1,14 @@
-/**
+﻿/**
  * Versioned save game in IndexedDB (one slot). Saves are validated on load; older versions are
  * migrated step by step; anything unreadable is reported as corrupt instead of crashing.
  */
-export const SAVE_VERSION = 2;
+import { LEGACY_OBJECTIVES, OBJECTIVES } from '../missions/missions';
+import { LOCKER_STOCK, STARTING_HOTBAR, STARTING_KIT } from '../inventory/items';
+import type { SlotData } from '../inventory/inventory';
+import type { OreSave } from '../inventory/ore';
+import type { Discovery } from '../inventory/discoveries';
+
+export const SAVE_VERSION = 4;
 
 export interface SaveData {
   version: number;
@@ -12,6 +18,29 @@ export interface SaveData {
   mission: { index: number; records: string[]; flags: string[] };
   world: { drill: 'idle' | 'running' | 'done'; drillProgress: number; iceScanned: boolean };
   playSeconds: number;
+  /** v3: suit inventory slots, quick slots, storage containers by id, ore world changes, geological discoveries. */
+  inventory: SlotData[];
+  hotbar: { slots: Array<string | null>; selected: number };
+  storage: Record<string, SlotData[]>;
+  ore: OreSave;
+  discoveries: Discovery[];
+  /** Rover R-1 state (optional: absent in early v3 saves → rover starts at its survey site). */
+  rover?: { x: number; z: number; yaw: number; battery: number; condition: number; odometer: number };
+  /** Outpost facilities (farm beds, shields, comms credits; optional: absent → fresh state). Validated by loadFacilities. */
+  base?: unknown;
+  /** v4: MEV-1 manned exploration vehicle (optional: absent → parked in the hangar). */
+  mev?: { x: number; z: number; yaw: number; battery: number; condition: number; odometer: number };
+}
+
+/** Fresh v3 inventory state (new game, and the v2 → v3 migration). */
+export function defaultInventoryState(): Pick<SaveData, 'inventory' | 'hotbar' | 'storage' | 'ore' | 'discoveries'> {
+  return {
+    inventory: STARTING_KIT.map(([id, count]) => ({ id, count })),
+    hotbar: { slots: [...STARTING_HOTBAR], selected: 0 },
+    storage: { locker_main: LOCKER_STOCK.map(([id, count]) => ({ id, count })) },
+    ore: { remaining: {}, pickups: [] },
+    discoveries: [],
+  };
 }
 
 export type LoadResult = { status: 'none' } | { status: 'ok'; data: SaveData; migratedFrom?: number } | { status: 'corrupt'; reason: string };
@@ -29,6 +58,20 @@ const MIGRATIONS: Record<number, Migration> = {
     const world = (s.world ?? {}) as Record<string, unknown>;
     return { ...s, version: 2, suit: { ...suit, lamp: false }, world: { ...world, iceScanned: false } };
   },
+  // v2 → v3: inventory/storage/ore systems added; existing saves receive the starting kit and a stocked locker.
+  2: (s) => ({ ...s, version: 3, ...defaultInventoryState() }),
+  // v3 → v4: the 7-objective vertical slice became the chaptered EXPEDITION 02 campaign. The old objective index maps
+  // to the campaign objective at the same story point; everything before it is marked done (no cinematics replay).
+  3: (s) => {
+    const m = (s.mission ?? {}) as { index?: number; records?: string[]; flags?: string[] };
+    const oldIndex = typeof m.index === 'number' ? m.index : 0;
+    const target = LEGACY_OBJECTIVES[Math.max(0, Math.min(7, oldIndex))] ?? 'locate_outpost';
+    const index = Math.max(0, OBJECTIVES.findIndex((o) => o.id === target));
+    const flags = new Set((m.flags ?? []).filter((f) => !f.startsWith('done.')));
+    for (const o of OBJECTIVES.slice(0, index)) { flags.add(`done.${o.id}`); flags.add(`appr.${o.id}`); }
+    if (index > 0) flags.add('s.airlock.scan');
+    return { ...s, version: 4, mission: { index, records: m.records ?? [], flags: [...flags] } };
+  },
 };
 
 const num = (v: unknown, lo: number, hi: number): v is number => typeof v === 'number' && Number.isFinite(v) && v >= lo && v <= hi;
@@ -43,6 +86,12 @@ export function validate(s: unknown): string | null {
   if (!d.suit || !num(d.suit.oxygen, 0, 100) || !num(d.suit.power, 0, 100) || !num(d.suit.health, 0, 100)) return 'suit';
   if (!d.mission || !num(d.mission.index, 0, 100) || !Array.isArray(d.mission.records) || !Array.isArray(d.mission.flags)) return 'mission';
   if (!d.world || !['idle', 'running', 'done'].includes(d.world.drill)) return 'world';
+  if (!Array.isArray(d.inventory) || d.inventory.length > 64) return 'inventory';
+  if (!d.hotbar || !Array.isArray(d.hotbar.slots) || !num(d.hotbar.selected, 0, 9)) return 'hotbar';
+  if (!d.storage || typeof d.storage !== 'object' || Object.values(d.storage).some((v) => !Array.isArray(v))) return 'storage';
+  if (!d.ore || typeof d.ore !== 'object' || !Array.isArray(d.ore.pickups)) return 'ore';
+  if (!Array.isArray(d.discoveries)) return 'discoveries';
+  if (d.rover !== undefined && (!num(d.rover.x, -4000, 4000) || !num(d.rover.z, -4000, 4000) || !num(d.rover.battery, 0, 100) || !num(d.rover.condition, 0, 100))) return 'rover';
   return null;
 }
 

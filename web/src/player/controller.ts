@@ -32,6 +32,12 @@ export class PlayerController {
   sensitivity = 1;
   invertY = false;
   private bob = 0;
+  private landingPitch = 0;
+  private landingPitchVelocity = 0;
+  private landingRoll = 0;
+  private landingRollVelocity = 0;
+  private impactOffset = 0;
+  private impactOffsetVelocity = 0;
   private rocks: RockCollider[] = [];
   /** Metres fallen in the last landing (for feedback / damage). */
   lastLandingSpeed = 0;
@@ -48,6 +54,9 @@ export class PlayerController {
     this.vel.set(0, 0, 0);
     this.yaw = yaw;
     this.pitch = 0;
+    this.landingPitch = this.landingPitchVelocity = 0;
+    this.landingRoll = this.landingRollVelocity = 0;
+    this.impactOffset = this.impactOffsetVelocity = 0;
   }
 
   look(input: Input): void {
@@ -82,6 +91,14 @@ export class PlayerController {
     }
     this.vel.y -= GRAVITY * dt;
 
+    // Helmet and suit mass keep moving briefly after an impact, then settle with a damped spring.
+    this.landingPitchVelocity += (-90 * this.landingPitch - 18 * this.landingPitchVelocity) * dt;
+    this.landingRollVelocity += (-80 * this.landingRoll - 17 * this.landingRollVelocity) * dt;
+    this.impactOffsetVelocity += (-100 * this.impactOffset - 19 * this.impactOffsetVelocity) * dt;
+    this.landingPitch += this.landingPitchVelocity * dt;
+    this.landingRoll += this.landingRollVelocity * dt;
+    this.impactOffset += this.impactOffsetVelocity * dt;
+
     // Slope limit: remove the uphill component on terrain steeper than MAX_SLOPE.
     const ahead = this.ground.at(this.pos.x + this.vel.x * 0.15, this.pos.z + this.vel.z * 0.15, this.pos.y + 0.3).n;
     if (ahead[1] < MAX_SLOPE) {
@@ -102,7 +119,14 @@ export class PlayerController {
     const ground = hit.h;
     const n = hit.n;
     if (this.pos.y <= ground || (this.grounded && this.vel.y <= 0 && this.pos.y - ground < STEP_SNAP)) {
-      if (!this.grounded) this.lastLandingSpeed = -this.vel.y;
+      if (!this.grounded) {
+        this.lastLandingSpeed = -this.vel.y;
+        const impact = Math.max(0, Math.min(1, (this.lastLandingSpeed - 1.2) / 7.5));
+        this.landingPitchVelocity += impact * 1.15;
+        this.impactOffsetVelocity -= impact * 0.42;
+        const lateral = this.vel.x * Math.cos(this.yaw) + this.vel.z * Math.sin(this.yaw);
+        this.landingRollVelocity += Math.max(-1, Math.min(1, lateral * 0.22)) * impact;
+      }
       this.pos.y = ground;
       this.vel.y = 0;
       this.grounded = true;
@@ -130,6 +154,7 @@ export class PlayerController {
   private resolveColliders(): void {
     const p = this.pos;
     for (const c of this.colliders.circles) this.pushOut(c.x, c.z, c.r, c.bottom, c.top);
+    for (const s of this.ground.structures) s.resolve(p, RADIUS, this.vel);
     this.rockField.collidersNear(p.x, p.z, this.rocks);
     for (const r of this.rocks) this.pushOut(r.x, r.z, r.r, -1e9, r.top);
   }
@@ -153,12 +178,12 @@ export class PlayerController {
   applyCamera(cam: PerspectiveCamera, alpha: number): void {
     cam.position.lerpVectors(this.prevPos, this.pos, alpha);
     const amp = this.sprinting ? 0.05 : 0.03;
-    cam.position.y += EYE + Math.sin(this.bob * 2) * amp * (this.moving && this.grounded ? 1 : 0);
+    cam.position.y += EYE + Math.sin(this.bob * 2) * amp * (this.moving && this.grounded ? 1 : 0) + this.impactOffset;
     // Never let the near plane dip into steep ground in front of the eye.
     const g = this.ground.at(cam.position.x, cam.position.z, cam.position.y - 0.4).h + 0.35;
     if (cam.position.y < g) cam.position.y = g;
     cam.rotation.order = 'YXZ';
-    cam.rotation.set(this.pitch, this.yaw, 0);
+    cam.rotation.set(this.pitch - this.landingPitch, this.yaw, this.landingRoll);
   }
 
   /** Compass heading in degrees (0 = north/+Z, 90 = east/+X). */

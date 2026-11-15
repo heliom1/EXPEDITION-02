@@ -1,4 +1,4 @@
-import { PerspectiveCamera, Vector3 } from 'three';
+﻿import { PerspectiveCamera, Vector3 } from 'three';
 import { h, fmtDistance } from './dom';
 import type { SurveyMap, MapMarker } from './minimap';
 import type { Objective } from '../missions/missions';
@@ -52,6 +52,7 @@ export class Hud {
   private waypoint: HTMLElement;
   private waypointText: HTMLElement;
   private slots: HTMLElement[] = [];
+  private vehicle: HTMLElement;
   private v = new Vector3();
   private miniTimer = 0;
 
@@ -88,7 +89,7 @@ export class Hud {
 
     const hotbar = h('div.hotbar');
     SLOTS.forEach((s, i) => {
-      const el = h('div.slot.panel', { title: s.name }, h('span.n', null, String(i + 1)), s.icon);
+      const el = h('div.slot.panel', { title: s.name }, h('span.n', null, String(i + 1)), h('span.icon', null, s.icon), h('span.c'));
       this.slots.push(el);
       hotbar.append(el);
     });
@@ -104,9 +105,10 @@ export class Hud {
     this.notices = h('div.notices');
     this.waypointText = h('div');
     this.waypoint = h('div.waypoint.hidden', null, this.waypointText, h('div.d'));
-    const hint = h('div.hint-bar', null, h('kbd', null, 'TAB'), ' PDA  ·  ', h('kbd', null, 'E'), ' interact  ·  ', h('kbd', null, 'Shift'), ' sprint');
+    const hint = h('div.hint-bar', null, h('kbd', null, 'TAB'), ' PDA  ·  ', h('kbd', null, 'E'), ' interact  ·  ', h('kbd', null, '1–5'), ' tools  ·  ', h('kbd', null, 'Q'), ' use item');
 
-    this.root = h('div.hud.hidden', null, h('div.vignette'), objective, compass, minimap, vitals, hotbar, this.prompt, this.cross, this.progress, this.notices, this.waypoint, hint);
+    this.vehicle = h('div.vehicle.panel.hidden');
+    this.root = h('div.hud.hidden', null, h('div.vignette'), objective, compass, minimap, vitals, hotbar, this.vehicle, this.prompt, this.cross, this.progress, this.notices, this.waypoint, hint);
     parent.append(this.root);
   }
 
@@ -114,8 +116,35 @@ export class Hud {
     this.root.classList.toggle('hidden', !on);
   }
 
+  /** Rover status panel while driving (null hides it). */
+  setVehicle(v: { name: string; kmh: number; battery: number; condition: number; pitchDeg: number; rollDeg: number; charging: boolean; camera: string } | null): void {
+    this.vehicle.classList.toggle('hidden', !v);
+    if (!v) return;
+    const bar = (p: number, c: string) => h('div.track', null, h('div.fill', { style: { width: `${Math.max(0, Math.min(100, p))}%`, background: c } }));
+    this.vehicle.replaceChildren(
+      h('div.vt', null, v.name, h('span', null, v.camera)),
+      h('div.vs', null, h('b', null, v.kmh.toFixed(1)), ' km/h'),
+      h('div.vr', null, h('span', null, v.charging ? 'Battery ⚡' : 'Battery'), bar(v.battery, v.battery < 20 ? 'var(--warn, #e0a050)' : 'var(--energy)'), h('span', null, `${Math.round(v.battery)}%`)),
+      h('div.vr', null, h('span', null, 'Condition'), bar(v.condition, 'var(--health)'), h('span', null, `${Math.round(v.condition)}%`)),
+      h('div.vh', null, `Pitch ${v.pitchDeg.toFixed(0)}°  ·  Roll ${v.rollDeg.toFixed(0)}°`),
+      h('div.vh', null, h('kbd', null, 'W/S'), ' drive  ', h('kbd', null, 'A/D'), ' steer  ', h('kbd', null, 'Space'), ' brake  ', h('kbd', null, 'C'), ' camera  ', h('kbd', null, 'E'), ' exit'),
+    );
+  }
+
   selectSlot(i: number): void {
     this.slots.forEach((s, k) => s.classList.toggle('on', k === i));
+  }
+
+  /** Quick-slot contents from the inventory: icon, name and carried count (0 = greyed out; tools show no count). */
+  setHotbar(items: Array<{ icon: string; name: string; count: number; tool: boolean } | null>, selected: number): void {
+    this.slots.forEach((el, k) => {
+      const it = items[k];
+      el.title = it ? `${it.name}${it.tool ? '' : ` ×${it.count}`}` : 'Empty';
+      (el.querySelector('.icon') as HTMLElement).textContent = it ? it.icon : '';
+      (el.querySelector('.c') as HTMLElement).textContent = it && !it.tool ? String(it.count) : '';
+      el.classList.toggle('empty', !it || it.count <= 0);
+    });
+    this.selectSlot(selected);
   }
 
   notify(text: string, tone: 'info' | 'warn' | 'good' = 'info'): void {

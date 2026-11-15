@@ -1,6 +1,6 @@
-import { PerspectiveCamera, Vector3 } from 'three';
+﻿import { PerspectiveCamera, Vector3 } from 'three';
 
-export type InteractionVerb = 'Inspect' | 'Access' | 'Activate' | 'Read' | 'Recharge' | 'Repair' | 'Collect';
+export type InteractionVerb = 'Inspect' | 'Access' | 'Activate' | 'Read' | 'Recharge' | 'Repair' | 'Collect' | 'Drill' | 'Board';
 
 /** Data-driven interactable: anything with a world position, a verb and a handler. */
 export interface Interactable {
@@ -26,6 +26,12 @@ export class InteractionSystem {
     this.items.push(i);
   }
 
+  /** Removes an interactable (e.g. a collected pickup). */
+  remove(id: string): void {
+    this.items = this.items.filter((i) => i.id !== id);
+    if (this.focused?.id === id) this.focused = null;
+  }
+
   update(cam: PerspectiveCamera): void {
     cam.getWorldDirection(this.dir);
     let best: Interactable | null = null;
@@ -42,6 +48,14 @@ export class InteractionSystem {
       if (score > bestScore) { bestScore = score; best = it; }
     }
     this.focused = best;
+  }
+
+  /** Triggers an enabled interactable by id (automated tests). */
+  triggerId(id: string): boolean {
+    const it = this.items.find((i) => i.id === id && (!i.enabled || i.enabled()));
+    if (!it) return false;
+    it.interact();
+    return true;
   }
 
   trigger(): boolean {

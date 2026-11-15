@@ -1,0 +1,818 @@
+{
+  "_comment": "Voice script. Generated to public/assets/audio/voice/<id>.mp3 by tools/generate-voice.mjs (ElevenLabs). The game shows `text` as subtitles. Story lines stay within docs/NARRATIVE_SOURCE_OF_TRUTH.md beats; no new revelations.",
+  "speakers": {
+    "narrator": {
+      "name": "Suit companion",
+      "voiceId": "EXAVITQu4vr4xnSDxMaL",
+      "voiceName": "Sarah (ElevenLabs premade)",
+      "settings": {
+        "stability": 0.55,
+        "similarity_boost": 0.8,
+        "style": 0.25
+      }
+    },
+    "control": {
+      "name": "Mission Control",
+      "voiceId": "onwK4e9ZLuTAKqWW03F9",
+      "voiceName": "Daniel (ElevenLabs premade)",
+      "settings": {
+        "stability": 0.6,
+        "similarity_boost": 0.75,
+        "style": 0.1
+      },
+      "radio": true
+    },
+    "astronaut": {
+      "name": "Astronaut",
+      "voiceId": "bIHbv24MWmeRgasZH58o",
+      "voiceName": "Will (ElevenLabs premade)",
+      "settings": {
+        "stability": 0.45,
+        "similarity_boost": 0.8,
+        "style": 0.3
+      }
+    },
+    "pda": {
+      "name": "PDA",
+      "engine": "kokoro",
+      "voiceId": "af_heart",
+      "voiceName": "Kokoro-82M af_heart (Apache-2.0, generated offline)",
+      "device": true
+    },
+    "rover": {
+      "name": "Rover system",
+      "voiceId": "SAz9YHcvj6GT2YYXdXww",
+      "voiceName": "River (ElevenLabs premade)",
+      "settings": {
+        "stability": 0.85,
+        "similarity_boost": 0.7,
+        "style": 0
+      },
+      "device": true
+    },
+    "researcher": {
+      "name": "Expedition One researcher",
+      "voiceId": "pFZP5JQG7iQjIQuC4Bku",
+      "voiceName": "Lily (ElevenLabs premade)",
+      "settings": {
+        "stability": 0.5,
+        "similarity_boost": 0.8,
+        "style": 0.2
+      },
+      "radio": true,
+      "archive": true
+    }
+  },
+  "lines": [
+    {
+      "id": "arrival",
+      "speaker": "narrator",
+      "trigger": "cutscene:arrival",
+      "text": "Mars, twenty forty-three. Ten years after the first crew arrived, you are the second astronaut to come. The outpost they built is waiting. So are the questions they left behind."
+    },
+    {
+      "id": "airlock_first",
+      "speaker": "narrator",
+      "trigger": "first:dome",
+      "text": "Pressure equalised. Welcome to the outpost."
+    },
+    {
+      "id": "checkin",
+      "speaker": "control",
+      "trigger": "obj:first_deploy:after",
+      "text": "Outpost check-in received. Rover R-1 last reported from the plain, about one point four kilometres east. Find it, and pull its log."
+    },
+    {
+      "id": "rover_log",
+      "speaker": "control",
+      "trigger": "obj:r1_link:done",
+      "text": "That log doesn't match the official report. DRL-2 was never supposed to have run. Restart the drill and bring us that core."
+    },
+    {
+      "id": "rover_board",
+      "speaker": "control",
+      "trigger": "first:remote",
+      "text": "R-1 is responding to manual control. Keep it off slopes steeper than twenty-eight degrees, and watch the battery."
+    },
+    {
+      "id": "drill_core",
+      "speaker": "narrator",
+      "trigger": "obj:formation:after",
+      "text": "Hydrogen, deep under the dust. And below it, a hollow the radar can't see into. The record says nothing about it."
+    },
+    {
+      "id": "first_sample",
+      "speaker": "narrator",
+      "trigger": "first:sample",
+      "text": "First sample logged. Every mineral out here is a page of Mars's history, and a resource for whoever stays."
+    },
+    {
+      "id": "cliff",
+      "speaker": "narrator",
+      "trigger": "obj:cave_entrance:after",
+      "text": "An opening in the escarpment, and survey beacons. Someone came this way, and never wrote it down."
+    },
+    {
+      "id": "cave_dark",
+      "speaker": "narrator",
+      "trigger": "first:cave",
+      "text": "Light levels falling. Switch on your suit lamp."
+    },
+    {
+      "id": "ice",
+      "speaker": "narrator",
+      "trigger": "reveal:ice:7",
+      "text": "Water ice. Layer upon layer of it, sealed under the mesa for longer than there have been people to look. This changes everything about staying."
+    },
+    {
+      "id": "transmission",
+      "speaker": "control",
+      "trigger": "obj:earth:after",
+      "text": "Transmission received. Water, in quantity, within reach of the outpost. We need everything you have on how they found it, and why it was never reported."
+    },
+    {
+      "id": "oxygen_low",
+      "speaker": "narrator",
+      "trigger": "warn:oxygen",
+      "text": "Oxygen below thirty percent. Head back to the airlock, or use a canister."
+    },
+    {
+      "id": "o_brief",
+      "speaker": "control",
+      "trigger": "open:brief",
+      "text": "Welcome, Expedition Two. Ten years ago, humanity established its first permanent research outpost on Mars. Your assignment is to continue their work, restore the existing settlement, and investigate the planet's potential for long-term human habitation. Several scientific objectives remain unfinished. Your primary responsibilities include habitat maintenance, rover operations, environmental monitoring, and geological exploration. All mission systems are prepared. Destination: Mars."
+    },
+    {
+      "id": "o_journey",
+      "speaker": "control",
+      "trigger": "open:journey",
+      "text": "Expedition Two, this is Mission Control. You are now approaching the final stage of your interplanetary journey. Estimated arrival at Mars is confirmed. All onboard systems are functioning within acceptable parameters. Prepare for orbital insertion."
+    },
+    {
+      "id": "o_reveal1",
+      "speaker": "astronaut",
+      "trigger": "open:reveal1",
+      "text": "Mission Control, Expedition Two. Mars is in visual range."
+    },
+    {
+      "id": "o_reveal2",
+      "speaker": "astronaut",
+      "trigger": "open:reveal2",
+      "text": "Ten years since the first expedition... Now it's our turn."
+    },
+    {
+      "id": "o_approach",
+      "speaker": "control",
+      "trigger": "open:approach",
+      "text": "Expedition Two, begin atmospheric entry preparations. Confirm heat shield integrity. Confirm landing sequence. All systems are ready."
+    },
+    {
+      "id": "o_copy",
+      "speaker": "astronaut",
+      "trigger": "open:copy",
+      "text": "Copy that. Beginning descent preparations."
+    },
+    {
+      "id": "o_entry1",
+      "speaker": "control",
+      "trigger": "open:entry1",
+      "text": "Atmospheric entry confirmed. Maintain your descent trajectory. Telemetry is stable."
+    },
+    {
+      "id": "o_entry2",
+      "speaker": "control",
+      "trigger": "open:entry2",
+      "text": "Expedition Two, we are experiencing signal interference. Continue descent."
+    },
+    {
+      "id": "o_chute",
+      "speaker": "control",
+      "trigger": "open:chute",
+      "text": "Parachute deployment confirmed. Descent velocity decreasing. Prepare for powered landing."
+    },
+    {
+      "id": "o_alt1",
+      "speaker": "control",
+      "trigger": "open:alt1",
+      "text": "Altitude decreasing. Five hundred meters."
+    },
+    {
+      "id": "o_alt2",
+      "speaker": "control",
+      "trigger": "open:alt2",
+      "text": "One hundred meters. Contact expected."
+    },
+    {
+      "id": "o_touch",
+      "speaker": "control",
+      "trigger": "open:touch",
+      "text": "Touchdown confirmed. Welcome to Mars, Expedition Two."
+    },
+    {
+      "id": "o_steps1",
+      "speaker": "astronaut",
+      "trigger": "open:steps1",
+      "text": "Mission Control... Expedition Two has successfully landed."
+    },
+    {
+      "id": "o_steps2",
+      "speaker": "astronaut",
+      "trigger": "open:steps2",
+      "text": "It's beautiful out here."
+    },
+    {
+      "id": "o_steps3",
+      "speaker": "control",
+      "trigger": "open:steps3",
+      "text": "Welcome to Mars. Your mission begins now."
+    },
+    {
+      "id": "c1_view",
+      "speaker": "astronaut",
+      "trigger": "obj:locate_outpost:approach",
+      "text": "According to the navigation system, the research outpost should be somewhere ahead. Let's see what ten years on Mars has done to this place."
+    },
+    {
+      "id": "c1_outpost",
+      "speaker": "pda",
+      "trigger": "obj:locate_outpost:done",
+      "text": "Destination reached. Original research outpost identified. Structural integrity: assessment required."
+    },
+    {
+      "id": "c1_airlock",
+      "speaker": "pda",
+      "trigger": "obj:airlock:approach",
+      "text": "External airlock detected. Access authorization required."
+    },
+    {
+      "id": "c1_airlock_done",
+      "speaker": "pda",
+      "trigger": "obj:airlock:done",
+      "text": "Airlock cycle completed. Internal atmospheric conditions are within acceptable limits."
+    },
+    {
+      "id": "c1_power_a",
+      "speaker": "pda",
+      "trigger": "obj:emergency_power:approach",
+      "text": "Primary electrical distribution is offline. Emergency power is available. Manual activation required."
+    },
+    {
+      "id": "c1_power_b",
+      "speaker": "pda",
+      "trigger": "obj:emergency_power:done",
+      "text": "Emergency power restored. Habitat control systems are now accessible."
+    },
+    {
+      "id": "c1_power_c",
+      "speaker": "control",
+      "trigger": "obj:emergency_power:done",
+      "text": "Expedition Two, we've detected your habitat connection. Welcome to the settlement."
+    },
+    {
+      "id": "c1_inspect_a",
+      "speaker": "pda",
+      "trigger": "obj:inspect_habitat:approach",
+      "text": "Initial habitat inspection required. Several facilities require assessment."
+    },
+    {
+      "id": "c1_inspect_b",
+      "speaker": "pda",
+      "trigger": "obj:inspect_habitat:done",
+      "text": "Initial assessment completed. Multiple systems require restoration."
+    },
+    {
+      "id": "c1_inspect_c",
+      "speaker": "astronaut",
+      "trigger": "obj:inspect_habitat:done",
+      "text": "Looks like we've got some work to do."
+    },
+    {
+      "id": "c2_reactor_a",
+      "speaker": "pda",
+      "trigger": "obj:reactor:approach",
+      "text": "Primary power system identified. Current operational status: standby. Complete a diagnostic assessment before activation."
+    },
+    {
+      "id": "c2_reactor_b",
+      "speaker": "pda",
+      "trigger": "obj:reactor:done",
+      "text": "Diagnostic report generated. Reactor activation authorized."
+    },
+    {
+      "id": "c2_elec_a",
+      "speaker": "pda",
+      "trigger": "obj:electrical:approach",
+      "text": "Several distribution channels are inactive. Restore the designated power connections."
+    },
+    {
+      "id": "c2_elec_b",
+      "speaker": "pda",
+      "trigger": "obj:electrical:done",
+      "text": "Electrical distribution restored. Essential habitat systems may now be activated."
+    },
+    {
+      "id": "c2_water_a",
+      "speaker": "pda",
+      "trigger": "obj:water:approach",
+      "text": "Water-recycling facility detected. Processing efficiency is below operational requirements."
+    },
+    {
+      "id": "c2_water_b",
+      "speaker": "pda",
+      "trigger": "obj:water:done",
+      "text": "Water-recycling system operational. Resource monitoring has resumed."
+    },
+    {
+      "id": "c2_o2_a",
+      "speaker": "pda",
+      "trigger": "obj:oxygen:approach",
+      "text": "Atmospheric processing system requires inspection. Review oxygen-generation status."
+    },
+    {
+      "id": "c2_o2_b",
+      "speaker": "pda",
+      "trigger": "obj:oxygen:done",
+      "text": "Oxygen-generation system operational. Habitat atmospheric support restored."
+    },
+    {
+      "id": "c2_food_a",
+      "speaker": "astronaut",
+      "trigger": "obj:food:approach",
+      "text": "An entire food-production facility. Let's see if we can bring it back."
+    },
+    {
+      "id": "c2_food_b",
+      "speaker": "pda",
+      "trigger": "obj:food:approach",
+      "text": "Food-production modules require restoration. Hydroponic cultivation, fungal cultivation, and nutrient recycling are available for assessment."
+    },
+    {
+      "id": "c2_food_c",
+      "speaker": "pda",
+      "trigger": "obj:food:done",
+      "text": "Food-production facilities operational. Long-term resource monitoring initiated."
+    },
+    {
+      "id": "c2_final_a",
+      "speaker": "pda",
+      "trigger": "obj:restoration:approach",
+      "text": "All designated restoration tasks have been recorded. Final habitat assessment required."
+    },
+    {
+      "id": "c2_final_b",
+      "speaker": "control",
+      "trigger": "obj:restoration:done",
+      "text": "Expedition Two, we've received your restoration report. Your settlement is operational. Excellent work."
+    },
+    {
+      "id": "c2_hook",
+      "speaker": "astronaut",
+      "trigger": "hook:c09",
+      "text": "What's Sector C-09?"
+    },
+    {
+      "id": "c3_garage",
+      "speaker": "pda",
+      "trigger": "obj:garage:done",
+      "text": "Rover maintenance facility identified. Available exploration vehicles detected."
+    },
+    {
+      "id": "c3_inspect",
+      "speaker": "astronaut",
+      "trigger": "obj:inspect_vehicle:approach",
+      "text": "This should be our primary exploration vehicle. Let's see what condition it's in."
+    },
+    {
+      "id": "c3_inspect_b",
+      "speaker": "pda",
+      "trigger": "obj:inspect_vehicle:approach",
+      "text": "Vehicle diagnostic required."
+    },
+    {
+      "id": "c3_restore_a",
+      "speaker": "pda",
+      "trigger": "obj:restore_vehicle:approach",
+      "text": "Electrical, navigation, and scientific instrumentation systems require inspection."
+    },
+    {
+      "id": "c3_restore_b",
+      "speaker": "rover",
+      "trigger": "obj:restore_vehicle:done",
+      "text": "Vehicle initialization complete. Exploration systems online."
+    },
+    {
+      "id": "c3_deploy_a",
+      "speaker": "astronaut",
+      "trigger": "obj:first_deploy:approach",
+      "text": "Expedition Two beginning first surface survey."
+    },
+    {
+      "id": "c3_deploy_b",
+      "speaker": "pda",
+      "trigger": "obj:first_deploy:done",
+      "text": "Surface survey completed. Geological data successfully collected. One additional navigation record detected."
+    },
+    {
+      "id": "c3_deploy_c",
+      "speaker": "astronaut",
+      "trigger": "obj:first_deploy:done",
+      "text": "That's strange. Where did these coordinates come from?"
+    },
+    {
+      "id": "c4_alert",
+      "speaker": "pda",
+      "trigger": "obj:storm_alert:approach",
+      "text": "Environmental alert. Severe dust storm approaching the settlement. External operations should be suspended."
+    },
+    {
+      "id": "c4_secure",
+      "speaker": "pda",
+      "trigger": "obj:secure:approach",
+      "text": "External equipment security required. Return exploration vehicles to protected storage."
+    },
+    {
+      "id": "c4_protect",
+      "speaker": "pda",
+      "trigger": "obj:storm_mode:approach",
+      "text": "Environmental protection protocol available. Prioritize essential habitat functions."
+    },
+    {
+      "id": "c4_maintain",
+      "speaker": "pda",
+      "trigger": "obj:maintain:approach",
+      "text": "Monitor essential resource production. Maintain stable habitat conditions until the storm passes."
+    },
+    {
+      "id": "c4_trans_a",
+      "speaker": "pda",
+      "trigger": "obj:transmission1:approach",
+      "text": "Unidentified archived transmission detected. Source: Expedition One."
+    },
+    {
+      "id": "c4_trans_b",
+      "speaker": "researcher",
+      "trigger": "obj:transmission1:done",
+      "text": "Expedition One, private research recording. We've identified something beneath the surface. The readings are unusual. We need to investigate further before sending our final report. Coordinates are being stored in the research archive."
+    },
+    {
+      "id": "c4_trans_c",
+      "speaker": "astronaut",
+      "trigger": "obj:transmission1:done",
+      "text": "Beneath the surface?"
+    },
+    {
+      "id": "c5_prep",
+      "speaker": "pda",
+      "trigger": "obj:long_prep:approach",
+      "text": "Long-distance exploration preparation required. Inspect vehicle condition, navigation, communications, and scientific instruments."
+    },
+    {
+      "id": "c5_prep_b",
+      "speaker": "astronaut",
+      "trigger": "obj:long_prep:done",
+      "text": "All right. Let's find out what's out there."
+    },
+    {
+      "id": "c5_travel",
+      "speaker": "pda",
+      "trigger": "obj:travel:approach",
+      "text": "Navigation destination confirmed. Proceed to designated survey coordinates."
+    },
+    {
+      "id": "c5_arrive",
+      "speaker": "pda",
+      "trigger": "obj:travel:done",
+      "text": "Survey location reached."
+    },
+    {
+      "id": "c5_sample_a",
+      "speaker": "pda",
+      "trigger": "obj:samples:approach",
+      "text": "Geological sample collection authorized. Record surface composition and environmental conditions."
+    },
+    {
+      "id": "c5_sample_b",
+      "speaker": "pda",
+      "trigger": "obj:samples:done",
+      "text": "Sample successfully catalogued."
+    },
+    {
+      "id": "c5_form_a",
+      "speaker": "pda",
+      "trigger": "obj:formation:approach",
+      "text": "Unusual subsurface readings detected. Additional scanning required."
+    },
+    {
+      "id": "c5_form_b",
+      "speaker": "pda",
+      "trigger": "obj:formation:done",
+      "text": "Subsurface anomaly recorded. Data correlation pending."
+    },
+    {
+      "id": "c5_rec_a",
+      "speaker": "astronaut",
+      "trigger": "obj:recorder:approach",
+      "text": "This equipment belongs to the first expedition. How long has this been sitting here?"
+    },
+    {
+      "id": "c5_rec_b",
+      "speaker": "pda",
+      "trigger": "obj:recorder:done",
+      "text": "Archived expedition data recovered. Several records reference underground geological surveys."
+    },
+    {
+      "id": "c6_ent_a",
+      "speaker": "pda",
+      "trigger": "obj:cave_entrance:approach",
+      "text": "Geological formation identified. Subsurface readings indicate a possible underground cavity. Proceed with environmental assessment."
+    },
+    {
+      "id": "c6_ent_b",
+      "speaker": "astronaut",
+      "trigger": "obj:cave_entrance:done",
+      "text": "This is the location from the archived coordinates. Let's take a closer look."
+    },
+    {
+      "id": "c6_prep_a",
+      "speaker": "pda",
+      "trigger": "obj:cave_prep:approach",
+      "text": "Underground exploration preparation required. Inspect portable lighting, environmental sensors, and geological scanning equipment."
+    },
+    {
+      "id": "c6_prep_b",
+      "speaker": "pda",
+      "trigger": "obj:cave_prep:done",
+      "text": "Exploration equipment ready. Underground survey authorized."
+    },
+    {
+      "id": "c6_enter",
+      "speaker": "astronaut",
+      "trigger": "obj:enter_cave:approach",
+      "text": "Mission Control, Expedition Two. We've entered the underground formation. Visibility is limited, but the structure appears stable."
+    },
+    {
+      "id": "c6_chamber",
+      "speaker": "pda",
+      "trigger": "obj:enter_cave:done",
+      "text": "Underground chamber identified. Environmental survey initiated."
+    },
+    {
+      "id": "c6_scan_a",
+      "speaker": "pda",
+      "trigger": "obj:subsurface:approach",
+      "text": "Unusual subsurface signal detected. Deploy geological scanning equipment."
+    },
+    {
+      "id": "c6_scan_b",
+      "speaker": "pda",
+      "trigger": "obj:subsurface:done",
+      "text": "High hydrogen concentration detected. Additional material identification required."
+    },
+    {
+      "id": "c6_scan_c",
+      "speaker": "astronaut",
+      "trigger": "obj:subsurface:done",
+      "text": "Hydrogen readings? That could mean several things. We need a closer look."
+    },
+    {
+      "id": "c6_ice_a",
+      "speaker": "pda",
+      "trigger": "obj:ice:approach",
+      "text": "Significant subsurface anomaly detected. Material composition remains unconfirmed. Proceed to designated scanning location."
+    },
+    {
+      "id": "c6_ice_b",
+      "speaker": "astronaut",
+      "trigger": "reveal:ice:1",
+      "text": "...No way."
+    },
+    {
+      "id": "c6_ice_c",
+      "speaker": "astronaut",
+      "trigger": "reveal:ice:2",
+      "text": "Mission Control... You're going to want to see this."
+    },
+    {
+      "id": "c6_ice_d",
+      "speaker": "control",
+      "trigger": "reveal:ice:3",
+      "text": "Expedition Two, go ahead."
+    },
+    {
+      "id": "c6_ice_e",
+      "speaker": "astronaut",
+      "trigger": "reveal:ice:4",
+      "text": "We've found ice. Not just traces. There's a massive deposit beneath the surface."
+    },
+    {
+      "id": "c6_ice_f",
+      "speaker": "control",
+      "trigger": "reveal:ice:5",
+      "text": "Please repeat your last transmission."
+    },
+    {
+      "id": "c6_ice_g",
+      "speaker": "astronaut",
+      "trigger": "reveal:ice:6",
+      "text": "Confirmed subsurface water ice. Large-scale deposits. Mission Control... I think we've found something important."
+    },
+    {
+      "id": "c6_sample_a",
+      "speaker": "pda",
+      "trigger": "obj:ice_sample:approach",
+      "text": "Scientific sample collection authorized. Collect a controlled sample for laboratory analysis."
+    },
+    {
+      "id": "c6_sample_b",
+      "speaker": "astronaut",
+      "trigger": "obj:ice_sample:done",
+      "text": "Sample secured. Let's get this back to the lab."
+    },
+    {
+      "id": "c6_return_a",
+      "speaker": "pda",
+      "trigger": "obj:return:approach",
+      "text": "Scientific discovery successfully recorded. Return to the research outpost for laboratory analysis."
+    },
+    {
+      "id": "c6_return_b",
+      "speaker": "control",
+      "trigger": "obj:return:done",
+      "text": "Expedition Two, we've received your discovery report. Congratulations. This could be one of the most significant findings of the mission."
+    },
+    {
+      "id": "c7_lab_a",
+      "speaker": "pda",
+      "trigger": "obj:lab_transfer:approach",
+      "text": "Laboratory transfer station identified. Secure the collected geological sample for analysis."
+    },
+    {
+      "id": "c7_lab_b",
+      "speaker": "pda",
+      "trigger": "obj:lab_transfer:done",
+      "text": "Sample successfully transferred. Laboratory analysis available."
+    },
+    {
+      "id": "c7_an_a",
+      "speaker": "pda",
+      "trigger": "obj:analyze:approach",
+      "text": "Scientific analysis initiated. Material composition, purity, and geological characteristics will be evaluated."
+    },
+    {
+      "id": "c7_an_b",
+      "speaker": "pda",
+      "trigger": "obj:analyze:done",
+      "text": "Water ice confirmed. Sample contains frozen water. Additional environmental sampling recommended to determine the extent and distribution of the deposit."
+    },
+    {
+      "id": "c7_an_c",
+      "speaker": "astronaut",
+      "trigger": "obj:analyze:done",
+      "text": "So it's real. There's water beneath this surface."
+    },
+    {
+      "id": "c7_rev_a",
+      "speaker": "pda",
+      "trigger": "obj:review:approach",
+      "text": "Previous expedition records detected. Multiple geological surveys reference subsurface anomalies."
+    },
+    {
+      "id": "c7_rev_b",
+      "speaker": "astronaut",
+      "trigger": "obj:review:done",
+      "text": "They were looking for this. They already had evidence. But why didn't they finish the investigation?"
+    },
+    {
+      "id": "c7_rec_a",
+      "speaker": "pda",
+      "trigger": "obj:reconstruct:approach",
+      "text": "Available geological records can be combined. Reconstruct the previous expedition's underground survey."
+    },
+    {
+      "id": "c7_rec_b",
+      "speaker": "pda",
+      "trigger": "obj:reconstruct:done",
+      "text": "Research reconstruction completed. Several potential ice-bearing geological regions identified."
+    },
+    {
+      "id": "c7_com_a",
+      "speaker": "pda",
+      "trigger": "obj:earth:approach",
+      "text": "Long-range communication system available. Transmit the verified scientific discovery."
+    },
+    {
+      "id": "c7_com_b",
+      "speaker": "control",
+      "trigger": "obj:earth:done",
+      "text": "Expedition Two, we have received your findings. Your discovery is significant. We're forwarding the information to the scientific review team. Continue the investigation and preserve all original research records."
+    },
+    {
+      "id": "c8_loc_a",
+      "speaker": "pda",
+      "trigger": "obj:facility:approach",
+      "text": "Undocumented research facility identified. Architecture and equipment signatures correspond to Expedition One."
+    },
+    {
+      "id": "c8_loc_b",
+      "speaker": "astronaut",
+      "trigger": "obj:facility:done",
+      "text": "This has to be the place. Let's see what they left behind."
+    },
+    {
+      "id": "c8_aux_a",
+      "speaker": "pda",
+      "trigger": "obj:aux:approach",
+      "text": "Auxiliary power unavailable. Research archive inaccessible. Restore the designated facility systems."
+    },
+    {
+      "id": "c8_aux_b",
+      "speaker": "pda",
+      "trigger": "obj:aux:done",
+      "text": "Research archive accessible."
+    },
+    {
+      "id": "c8_recs_a",
+      "speaker": "pda",
+      "trigger": "obj:records:approach",
+      "text": "Multiple archived geological records detected. Recover and synchronize the available research files."
+    },
+    {
+      "id": "c8_recs_b",
+      "speaker": "astronaut",
+      "trigger": "obj:records:done",
+      "text": "They found the same readings. They knew there was something beneath this region."
+    },
+    {
+      "id": "c8_final_a",
+      "speaker": "pda",
+      "trigger": "obj:final_recording:approach",
+      "text": "Final expedition recording recovered. Recording date: twenty thirty-five."
+    },
+    {
+      "id": "c8_final_b",
+      "speaker": "researcher",
+      "trigger": "archive:final:1",
+      "text": "Our latest geological survey indicates the presence of significant subsurface ice deposits. We have confirmed that the region contains frozen water. However, our current survey equipment cannot establish the full extent of the deposits. We recommend further exploration and additional sampling."
+    },
+    {
+      "id": "c8_final_c",
+      "speaker": "researcher",
+      "trigger": "archive:final:2",
+      "text": "Our investigation remains incomplete."
+    },
+    {
+      "id": "c8_final_d",
+      "speaker": "astronaut",
+      "trigger": "obj:final_recording:done",
+      "text": "They weren't hiding some impossible discovery. They simply never finished documenting it."
+    },
+    {
+      "id": "c8_survey_a",
+      "speaker": "pda",
+      "trigger": "obj:survey:approach",
+      "text": "Original survey records recovered. Current Expedition Two observations available. Combine available data to produce a consolidated geological assessment."
+    },
+    {
+      "id": "c8_survey_b",
+      "speaker": "pda",
+      "trigger": "obj:survey:done",
+      "text": "Geological assessment completed. Confirmed water ice deposits documented. Additional exploration recommended."
+    },
+    {
+      "id": "c8_report_a",
+      "speaker": "pda",
+      "trigger": "obj:final_report:approach",
+      "text": "Final mission assessment required. Compile environmental, geological, and settlement data."
+    },
+    {
+      "id": "c8_report_b",
+      "speaker": "control",
+      "trigger": "obj:final_report:done",
+      "text": "Expedition Two, your findings have been received. Your work has provided new evidence of Mars' potential for future human settlement. We are awaiting your final recommendation."
+    },
+    {
+      "id": "e_assess",
+      "speaker": "pda",
+      "trigger": "obj:assessment:approach",
+      "text": "All primary mission objectives have been recorded. Final assessment available."
+    },
+    {
+      "id": "e_choice",
+      "speaker": "control",
+      "trigger": "obj:choice:approach",
+      "text": "Expedition Two, your final report has been received. Humanity has waited a long time for a discovery like this. We need your recommendation."
+    },
+    {
+      "id": "e_final1",
+      "speaker": "astronaut",
+      "trigger": "final:1",
+      "text": "Expedition Two, final log. Ten years ago, humanity came here to discover whether Mars could become our second home. Today, we've found another reason to keep looking."
+    },
+    {
+      "id": "e_final2",
+      "speaker": "astronaut",
+      "trigger": "final:2",
+      "text": "There's still so much we don't understand. Until the next expedition... End of transmission."
+    }
+  ]
+}

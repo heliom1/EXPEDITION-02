@@ -23,6 +23,139 @@ export const INTRO = {
 };
 
 export const RECORDS: Record<string, StoryRecord> = {
+  // ---- EXPEDITION 02 campaign records (user's cinematic script; kept close to its wording) ----
+  reactor_diag: {
+    id: 'reactor_diag', kind: 'telemetry', title: 'Reactor Diagnostic Report', source: 'Reactor control console', draft: false,
+    body: [
+      'PRIMARY POWER SYSTEM ..... fission surface power unit',
+      'STATUS ................... standby → activation authorized',
+      'CORE TEMPERATURE ......... nominal',
+      'RADIATOR LOOPS ........... 2 of 2 pressurized',
+      'OUTPUT AVAILABLE ......... 40 kWe',
+      '',
+      'Diagnostic report generated. Reactor activation authorized.',
+    ].join('\n'),
+  },
+  c09: {
+    id: 'c09', kind: 'report', title: 'ARCHIVED RECORD — Unfinished Expedition Report', source: 'Mission database', draft: false,
+    body: [
+      'UNFINISHED EXPEDITION REPORT',
+      '',
+      'Research location ....... C-09',
+      'Status .................. Incomplete',
+      'Last recorded activity .. 2035',
+      'Associated personnel .... Expedition One',
+      'Additional information .. Restricted',
+    ].join('\n'),
+  },
+  vehicle_diag: {
+    id: 'vehicle_diag', kind: 'telemetry', title: 'MEV-1 Vehicle Diagnostic', source: 'Hangar maintenance terminal', draft: false,
+    body: [
+      'ELECTRICAL ........ bus restored · battery 62 %',
+      'NAVIGATION ........ IMU aligned · terrain-relative nav online',
+      'INSTRUMENTS ....... survey radar · spectrometer · mast camera online',
+      'DRIVE ............. 4 hub motors nominal · suspension within limits',
+      '',
+      'Vehicle initialization complete. Exploration systems online.',
+    ].join('\n'),
+  },
+  survey1: {
+    id: 'survey1', kind: 'telemetry', title: 'First Surface Survey', source: 'MEV-1 survey radar', draft: false,
+    body: [
+      'Surface survey completed. Geological data successfully collected.',
+      '',
+      'One additional navigation record detected: a periodic beacon on the plain to the east —',
+      'identified as remote survey rover R-1 (Expedition 1), last command 2035.',
+    ].join('\n'),
+  },
+  transmission_e1: {
+    id: 'transmission_e1', kind: 'report', title: 'Recovered Transmission — Expedition One', source: 'Comms uplink (archived, damaged)', draft: false,
+    body: [
+      '"Expedition One, private research recording.',
+      'We\'ve identified something beneath the surface.',
+      'The readings are unusual.',
+      'We need to investigate further before sending our final report.',
+      'Coordinates are being stored in the research archive."',
+      '',
+      'Archived coordinates: survey point DRL-2, channel floor south of the escarpment.',
+    ].join('\n'),
+  },
+  recorder_e1: {
+    id: 'recorder_e1', kind: 'report', title: 'Expedition One Data Recorder', source: 'Abandoned survey station', draft: false,
+    body: [
+      'Archived expedition data recovered.',
+      '',
+      'Several records reference underground geological surveys:',
+      '• ground-penetrating radar profiles across the escarpment',
+      '• a void beneath the cliff base, west of DRL-2',
+      '• beacon route B-1 … B-5 into the cavity',
+      '',
+      'The coordinates point toward a nearby cave system.',
+    ].join('\n'),
+  },
+  lab_analysis: {
+    id: 'lab_analysis', kind: 'telemetry', title: 'Laboratory Analysis — Ice Sample', source: 'Outpost laboratory', draft: false,
+    body: [
+      'Material composition, purity and geological characteristics evaluated.',
+      '',
+      'WATER ICE CONFIRMED — the sample contains frozen water.',
+      'Hydrogen readings in the field are explained by H₂O ice; no significant CO₂ ice.',
+      'Fine dust layers between ice bands indicate deposition over many cycles.',
+      '',
+      'Additional environmental sampling recommended to determine the extent and distribution of the deposit.',
+    ].join('\n'),
+  },
+  e1_surveys: {
+    id: 'e1_surveys', kind: 'report', title: 'Expedition One — Geological Survey Archive', source: 'Archived geological database', draft: false,
+    body: [
+      'Previous expedition records detected. Multiple geological surveys reference subsurface anomalies.',
+      '',
+      'TIMELINE',
+      '2033  orbital neutron data: elevated hydrogen, mid-latitudes',
+      '2034  radar profiles across the escarpment',
+      '2035  core sample scheduled at DRL-2 · cave route surveyed · report never filed',
+    ].join('\n'),
+  },
+  reconstruction: {
+    id: 'reconstruction', kind: 'telemetry', title: 'Research Reconstruction', source: 'Holographic mapping table', draft: false,
+    body: [
+      'Expedition 1 surveys combined with Expedition 2 field data.',
+      '',
+      'Several potential ice-bearing geological regions identified, including an undocumented Expedition 1 installation',
+      'on the plain west of the escarpment.',
+    ].join('\n'),
+  },
+  e1_final: {
+    id: 'e1_final', kind: 'report', title: 'Final Expedition Recording — 2035', source: 'Expedition 1 research facility', draft: false,
+    body: [
+      '"Our latest geological survey indicates the presence of significant subsurface ice deposits.',
+      'We have confirmed that the region contains frozen water.',
+      'However, our current survey equipment cannot establish the full extent of the deposits.',
+      'We recommend further exploration and additional sampling.',
+      '…Our investigation remains incomplete."',
+    ].join('\n'),
+  },
+  geo_assessment: {
+    id: 'geo_assessment', kind: 'telemetry', title: 'Consolidated Geological Assessment', source: 'Expedition 1 + Expedition 2 data', draft: false,
+    body: [
+      'Geological assessment completed.',
+      'Confirmed water ice deposits documented (lower chamber, cave system C-09).',
+      'Previously unexplored regions with probable ice: 4.',
+      'Additional exploration recommended.',
+    ].join('\n'),
+  },
+  final_report: {
+    id: 'final_report', kind: 'mission', title: 'Final Scientific Report', source: 'Expedition 2', draft: false,
+    body: [
+      'ENVIRONMENT — habitat atmosphere, water and food production restored; storm protocol validated.',
+      'GEOLOGY — subsurface water ice confirmed and sampled; survey of four further regions recommended.',
+      'SETTLEMENT — outpost operational; MEV-1 and R-1 returned to service.',
+      'ARCHIVE — Expedition 1 research recovered and preserved.',
+    ].join('\n'),
+  },
+};
+
+const LEGACY_RECORDS: Record<string, StoryRecord> = {
   assignment: {
     id: 'assignment',
     kind: 'mission',
@@ -160,6 +293,7 @@ export const RECORDS: Record<string, StoryRecord> = {
     ].join('\n'),
   },
 };
+Object.assign(RECORDS, LEGACY_RECORDS);
 
 /** Live base status shown at the hub panel (gameplay abstraction; values are illustrative). */
 export function baseStatusRecord(s: { output: number; demand: number; farm: number; myco: number; bio: number; lifeSupport: number }): StoryRecord {

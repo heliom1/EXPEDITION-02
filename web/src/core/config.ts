@@ -17,8 +17,15 @@ export type SiteId = keyof typeof SITES;
 /** Yaw such that the camera looks along (dx, dz). Camera forward is (-sin yaw, -cos yaw). */
 export const yawTowards = (dx: number, dz: number): number => Math.atan2(-dx, -dz);
 
-/** Player start: south-east of the outpost airlock, facing the habitat. */
-export const SPAWN = { x: -1214, z: 1122, yaw: yawTowards(-1250 + 1214, 1150 - 1122) };
+/** Player start: just outside the outpost's south airlock (the "EXIT" of the base plan), facing the main dome. */
+export const SPAWN = { x: -1242, z: 1129, yaw: yawTowards(-1250 + 1242, 1150 - 1129) };
+
+/**
+ * EXPEDITION 02 landing site (lander HORIZON): ~190 m south of the outpost, beyond a low ridge whose crest is the
+ * "first elevated viewpoint" that reveals the base (objective 1.1). New expeditions start beside the lander.
+ */
+export const LANDING = { x: -1212, z: 962 } as const;
+export const RIDGE = { x: -1228, z: 1048, len: 70, width: 22, height: 5.5, angle: 0.18 } as const;
 
 /** Direction *towards* the sun: low late-afternoon sun in the west, back/side-lighting the outpost from the spawn, as in the reference images. */
 export const SUN_DIR = new Vector3(-0.924, 0.292, 0.248).normalize();

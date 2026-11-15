@@ -1,9 +1,9 @@
-// Headless verification: opens the game in Chrome/Edge via the DevTools protocol, waits for the
+﻿// Headless verification: opens the game in Chrome/Edge via the DevTools protocol, waits for the
 // terrain to finish streaming, captures screenshots and reports console errors.
 // No extra dependencies (Node's built-in WebSocket + fetch).
 // Usage: node tools/shoot.mjs [baseUrl] [view ...]   views: menu spawn rover drill cliff vista
 import { spawn } from 'node:child_process';
-import { mkdirSync, writeFileSync, existsSync, mkdtempSync } from 'node:fs';
+import { mkdirSync, writeFileSync, existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
@@ -21,11 +21,14 @@ const browsers = [
 const exe = process.env.BROWSER ?? browsers.find(existsSync);
 if (!exe) throw new Error('No Chrome/Edge found');
 const port = 9333;
-const profile = mkdtempSync(join(tmpdir(), 'cf2-shot-'));
+// Throwaway browser profile on D: (C: is nearly full) — removed at the end of the run.
+const tmpRoot = join(here, '..', '..', '.tmp');
+mkdirSync(tmpRoot, { recursive: true });
+const profile = mkdtempSync(join(tmpRoot, 'cf2-shot-'));
 const proc = spawn(exe, [
   '--headless=new', `--remote-debugging-port=${port}`, `--user-data-dir=${profile}`,
   '--window-size=1600,900', '--ignore-gpu-blocklist', '--enable-gpu', '--use-angle=d3d11',
-  '--no-first-run', '--no-default-browser-check', '--mute-audio', 'about:blank',
+  '--no-first-run', '--no-default-browser-check', ...(process.env.CF_GPU === 'high' ? ['--force_high_performance_gpu'] : []), '--mute-audio', 'about:blank',
 ], { stdio: 'ignore' });
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -84,4 +87,5 @@ writeFileSync(join(out, 'report.json'), JSON.stringify(report, null, 2));
 console.log('GPU:', report.views[views[0]]?.gpu);
 ws.close();
 proc.kill();
+for (let i = 0; i < 20; i++) { try { rmSync(profile, { recursive: true, force: true }); break; } catch { await sleep(250); } }
 process.exit(0);

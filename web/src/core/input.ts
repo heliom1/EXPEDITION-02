@@ -1,9 +1,11 @@
-/** Keyboard + pointer-lock mouse input. Movement input is ignored while a UI layer has focus. */
+﻿/** Keyboard + pointer-lock mouse input. Movement input is ignored while a UI layer has focus. */
 export class Input {
   private keys = new Set<string>();
   private pressed = new Set<string>();
   mouseDX = 0;
   mouseDY = 0;
+  /** Accumulated mouse-wheel delta (camera zoom); read with takeWheel(). */
+  wheel = 0;
   uiFocus = false;
 
   constructor(private readonly target: HTMLElement) {
@@ -11,6 +13,13 @@ export class Input {
     window.addEventListener('keyup', this.onKeyUp);
     window.addEventListener('blur', this.onBlur);
     document.addEventListener('mousemove', this.onMouseMove);
+    window.addEventListener('wheel', (e) => { if (this.locked) this.wheel += e.deltaY; }, { passive: true });
+  }
+
+  takeWheel(): number {
+    const w = this.wheel;
+    this.wheel = 0;
+    return w;
   }
 
   get locked(): boolean {

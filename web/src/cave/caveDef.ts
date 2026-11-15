@@ -19,7 +19,7 @@ export const NODES: Record<string, CaveNode> = {
   westRoom: { x: -280, z: -413, floor: 5.0, r: 6.8 },
   deepNeck: { x: -214, z: -424, floor: -2.0, r: 3.9 },
   deepBend: { x: -201, z: -447, floor: -6.0, r: 4.4 },
-  iceRoom: { x: -195, z: -472, floor: -9.0, r: 11.5 },
+  iceRoom: { x: -195, z: -474, floor: -9.0, r: 14.0 },
 };
 
 /** Tunnel segments, entrance first. Segments 0..1 are the "mouth" mirrored in GLSL. */
@@ -39,7 +39,7 @@ export const MOUTH_SEGMENTS = 2;
 export const CHAMBERS: Array<{ node: string; r: number; squash: number }> = [
   { node: 'hall', r: 11.5, squash: 1.45 },
   { node: 'westRoom', r: 7.5, squash: 1.35 },
-  { node: 'iceRoom', r: 13.5, squash: 1.5 },
+  { node: 'iceRoom', r: 24.0, squash: 1.55 },
 ];
 
 /** Centre height above the floor as a fraction of radius: tunnels are taller than half-tubes. */
@@ -53,7 +53,7 @@ export const MOUTH = { x: -209.5, y: 12, z: -333 };
 export const ICE = { x: -192, y: -8.5, z: -480 };
 
 /** Bounding box of all air (with margin) — mesher domain. */
-export const BOUNDS = { min: [-300, -16, -492] as const, max: [-182 + 8, 26, -305] as const };
+export const BOUNDS = { min: [-300, -16, -512] as const, max: [-158, 30, -305] as const };
 
 // ---------------------------------------------------------------------------
 // Noise: warped sinusoids. Deterministic and cheap; identical in GLSL (see caveGlsl.ts).

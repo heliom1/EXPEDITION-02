@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+    <style>
+      /* EXPEDITION 02 opening title — rendered as transparent WebM and composited over the in-engine space shot. */
+      :root { --ink: #fbf3ea; --accent: #e8742c; --muted: #c9b8a8; --font-display: 'Outfit'; --font-mono: 'IBM Plex Mono'; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+      #root { width: 100%; height: 100%; position: relative; font-family: var(--font-display); }
+      .center { position: absolute; left: 0; right: 0; text-align: center; }
+      #eyebrow { top: 404px; color: var(--accent); font: 500 26px var(--font-mono); letter-spacing: 0.62em; }
+      #title { top: 452px; color: var(--ink); font-weight: 300; font-size: 128px; letter-spacing: 0.26em; text-shadow: 0 4px 40px rgba(0, 0, 0, 0.55); }
+      #title b { font-weight: 600; color: var(--accent); letter-spacing: 0.14em; }
+      #rule { position: absolute; transform-origin: 50% 50%; left: 760px; top: 628px; width: 400px; height: 2px; background: var(--accent); }
+      #tagline { top: 656px; color: var(--muted); font-size: 28px; letter-spacing: 0.7em; }
+      #coords { position: absolute; left: 96px; bottom: 96px; color: var(--muted); font: 400 20px var(--font-mono); letter-spacing: 0.2em; }
+      #coords2 { position: absolute; right: 96px; bottom: 96px; color: var(--muted); font: 400 20px var(--font-mono); letter-spacing: 0.2em; text-align: right; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="6" data-width="1920" data-height="1080">
+      <div id="eyebrow" class="center clip" data-start="0" data-duration="6" data-track-index="0"><span id="eyebrow-t" style="display:inline-block">MARS · 2043</span></div>
+      <div id="title" class="center clip" data-start="0" data-duration="6" data-track-index="1"><span id="title-t">EXPEDITION <b>02</b></span></div>
+      <div id="rule" class="clip" data-start="0" data-duration="6" data-track-index="2"></div>
+      <div id="tagline" class="center clip" data-start="0" data-duration="6" data-track-index="3"><span id="tag-t">EXPLORE. DISCOVER. SURVIVE.</span></div>
+      <div id="coords" class="clip" data-start="0" data-duration="6" data-track-index="4">ARCADIA PLANITIA · 46.0° N 150.0° W</div>
+      <div id="coords2" class="clip" data-start="0" data-duration="6" data-track-index="5">TRANSFER DAY 212 · ENTRY T−00:41:16</div>
+    </div>
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo('#eyebrow-t', { opacity: 0, scaleX: 1.35 }, { opacity: 1, scaleX: 1, duration: 1.2, ease: 'power3.out' }, 0.2);
+      tl.fromTo('#title-t', { opacity: 0, y: 18, filter: 'blur(10px)' }, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 1.5, ease: 'power3.out' }, 0.5);
+      tl.fromTo('#rule', { scaleX: 0 }, { scaleX: 1, duration: 1.2, ease: 'power2.inOut' }, 1.3);
+      tl.fromTo('#tag-t', { opacity: 0 }, { opacity: 1, duration: 1.0, ease: 'power1.out' }, 1.9);
+      tl.fromTo(['#coords', '#coords2'], { opacity: 0, y: 8 }, { opacity: 0.85, y: 0, duration: 0.9, ease: 'power2.out', stagger: 0.15 }, 2.2);
+      // hold, then everything leaves upward and dissolves by 5.9 s
+      tl.to(['#eyebrow-t', '#title-t', '#tag-t', '#coords', '#coords2'], { opacity: 0, y: -10, duration: 0.9, ease: 'power2.in' }, 4.95);
+      tl.to('#rule', { scaleX: 0, duration: 0.8, ease: 'power2.in' }, 4.95);
+      window.__timelines['main'] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

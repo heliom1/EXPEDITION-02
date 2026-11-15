@@ -23,6 +23,8 @@ export class RockField {
   private dirty = false;
   /** Rocks are scattered only on chunks at (or finer than) this terrain resolution. */
   minSegs = 128;
+  /** World rectangles kept free of rocks (structures). Set before the first chunk is scattered. */
+  keepOut: Array<{ x0: number; x1: number; z0: number; z1: number }> = [];
 
   constructor(private readonly world: WorldData, layers: LayerTextures) {
     const mat = new MeshStandardMaterial({ map: layers.albedo.Rock, normalMap: layers.normal.Rock, roughness: 0.9, metalness: 0 });
@@ -102,6 +104,7 @@ export class RockField {
         const x = x0 + (i + rnd()) * cellSize, z = z0 + (j + rnd()) * cellSize;
         if (!w.inside(x, z, 4)) { rnd(); continue; }
         if (nearCave(x, z) && caveSdf(x, w.heightAt(x, z), z, false) < 1.5) continue; // keep the cave mouth clear
+        if (this.keepOut.some((r) => x >= r.x0 && x <= r.x1 && z >= r.z0 && z <= r.z1)) continue; // structures (outpost pad)
         const [, dark, bed, , grav] = w.splatAt(x, z);
         const cluster = 0.5 + 0.5 * Math.sin(x * 0.043 + Math.sin(z * 0.031) * 2.1) * Math.sin(z * 0.051 + Math.sin(x * 0.027) * 1.7);
         const base = 0.012 + 0.22 * grav + 0.12 * bed + 0.03 * dark;

@@ -1,0 +1,114 @@
+﻿{
+    "audio":  null,
+    "duration":  125,
+    "aligned":  false,
+    "source":  "user transcript timestamps",
+    "cues":  [
+              
+                 {
+                     "at":  5,
+                     "dur":  1.8,
+                     "text":  "The year is 2043."
+                 },
+                 {
+                     "at":  7,
+                     "dur":  3.8,
+                     "text":  "10 years have passed since humanity first set foot on the Red Planet."
+                 },
+                 {
+                     "at":  11,
+                     "dur":  6.8,
+                     "text":  "What was once considered an impossible dream has become the beginning of a new era of exploration."
+                 },
+                 {
+                     "at":  18,
+                     "dur":  7.8,
+                     "text":  "Over the past decade, advancements in space technology have transformed what humanity can achieve beyond Earth."
+                 },
+                 {
+                     "at":  26,
+                     "dur":  3.8,
+                     "text":  "New discoveries have expanded our understanding of Mars."
+                 },
+                 {
+                     "at":  30,
+                     "dur":  8.8,
+                     "text":  "Research has pushed the boundaries of human survival, bringing us closer to establishing a permanent presence on another world."
+                 },
+                 {
+                     "at":  39,
+                     "dur":  4.8,
+                     "text":  "NASA has developed advanced systems to support life on the Martian surface."
+                 },
+                 {
+                     "at":  44,
+                     "dur":  12.8,
+                     "text":  "From life support and resource recycling technologies, to sustainable food production and advanced exploration equipment, each development has brought humanity one step closer to calling Mars home."
+                 },
+                 {
+                     "at":  57,
+                     "dur":  4.8,
+                     "text":  "And with every advancement came a new generation of explorers."
+                 },
+                 {
+                     "at":  62,
+                     "dur":  9.8,
+                     "text":  "Astronauts trained not only to survive, but to operate, maintain, and expand the systems that make life on Mars possible."
+                 },
+                 {
+                     "at":  72,
+                     "dur":  1.8,
+                     "text":  "You are one of them!"
+                 },
+                 {
+                     "at":  74,
+                     "dur":  6.8,
+                     "text":  "Selected for the second human expedition to Mars, you have been assigned to continue the work of the first crew."
+                 },
+                 {
+                     "at":  81,
+                     "dur":  11.8,
+                     "text":  "Your responsibilities are clear: maintain the existing facilities, operate exploration rovers, conduct research, and document everything you discover."
+                 },
+                 {
+                     "at":  93,
+                     "dur":  4.8,
+                     "text":  "Your mission is to help secure humanity\u0027s future on the Red Planet."
+                 },
+                 {
+                     "at":  98,
+                     "dur":  4.8,
+                     "text":  "But a decade of progress does not mean every question has been answered."
+                 },
+                 {
+                     "at":  103,
+                     "dur":  2.8,
+                     "text":  "Some areas remain unexplored."
+                 },
+                 {
+                     "at":  106,
+                     "dur":  2.8,
+                     "text":  "Some research remains unfinished."
+                 },
+                 {
+                     "at":  109,
+                     "dur":  5.8,
+                     "text":  "And the work of the first expedition has left behind more than scientific achievements."
+                 },
+                 {
+                     "at":  115,
+                     "dur":  2.8,
+                     "text":  "There is still much to discover."
+                 },
+                 {
+                     "at":  118,
+                     "dur":  2.8,
+                     "text":  "And now, it is your turn."
+                 },
+                 {
+                     "at":  121,
+                     "dur":  3.3,
+                     "text":  "Your journey begins on Mars."
+                 }
+             ]
+}

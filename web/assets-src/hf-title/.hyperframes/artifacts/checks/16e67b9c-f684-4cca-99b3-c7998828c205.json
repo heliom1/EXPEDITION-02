@@ -1,0 +1,241 @@
+{
+  "ok": false,
+  "strict": false,
+  "browserSkipped": false,
+  "lint": {
+    "ok": false,
+    "errorCount": 1,
+    "warningCount": 3,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "gsap_non_transform_motion",
+        "severity": "error",
+        "message": "GSAP tween on \"#eyebrow-t\" uses motion that snaps to integer device pixels: letterSpacing. Layout and text-reflow properties snap during browser layout; roundProps rounds the tween value. Slow motion or an ease-out tail then stutters under the seek-by-frame capture engine. Animate transforms (x/y/scale/opacity) instead.",
+        "selector": "#eyebrow-t",
+        "dataAttributes": {},
+        "sourceFile": "D:\\Cinderfall2\\web\\assets-src\\hf-title\\index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "do not animate letterSpacing (they reflow text and snap glyph positions): for letterSpacing, split the text into per-character elements and animate each glyph's x (the spread), since uniform scale is NOT equivalent, or hold the final value statically. Transforms interpolate sub-pixel and stay smooth at any speed."
+      },
+      {
+        "code": "unknown_variable_binding",
+        "severity": "warning",
+        "message": "<span> binds data-var-text=\"eyebrow\" but no variable \"eyebrow\" is declared in data-composition-variables, so the binding will silently keep the authored fallback.",
+        "selector": "#eyebrow-t",
+        "dataAttributes": {},
+        "sourceFile": "D:\\Cinderfall2\\web\\assets-src\\hf-title\\index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Declare the variable on the composition root (<html>, or the [data-composition-id] root element for a template/fragment comp): data-composition-variables='[{\"id\":\"eyebrow\",\"type\":\"string\",\"label\":\"eyebrow\",\"default\":\"...\"}]', or fix the binding id."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<div id=\"rule-host\"> is a timeline element that contains nested <div id=\"rule\">. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#rule-host",
+        "dataAttributes": {},
+        "sourceFile": "D:\\Cinderfall2\\web\\assets-src\\hf-title\\index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <div id=\"rule-host\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<div id=\"coords-host\"> is a timeline element that contains nested <div id=\"coords\">. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#coords-host",
+        "dataAttributes": {},
+        "sourceFile": "D:\\Cinderfall2\\web\\assets-src\\hf-title\\index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <div id=\"coords-host\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      }
+    ],
+    "filesScanned": 1
+  },
+  "runtime": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": []
+  },
+  "layout": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "duration": 6,
+    "samples": [
+      0.333,
+      1,
+      1.667,
+      2.333,
+      3,
+      3.667,
+      4.333,
+      5,
+      5.667
+    ],
+    "transitionSamples": [],
+    "transitionSamplesDropped": 0,
+    "tolerance": 2,
+    "totalIssueCount": 0,
+    "truncated": false
+  },
+  "motion": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": false,
+    "samples": 0
+  },
+  "contrast": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": true,
+    "samples": [
+      0.333,
+      1.667,
+      3,
+      4.333,
+      5.667
+    ],
+    "checked": 0,
+    "passed": 0
+  },
+  "craft": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 2,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "first_frame_empty",
+        "severity": "warning",
+        "message": "Frame 0 shows only the background, and the first frame is the thumbnail on social players: have the title or key image already on screen at 0 s instead of entering from nothing; see references/review.md.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and 3 text elements stay under it for 0.5 s or more, the smallest \"ARCADIA PLANITIA · 46.0° N 150.0° W\" at 20 px: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "ARCADIA PLANITIA · 46.0° N 150.0° W",
+        "selector": "#coords",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 96,
+          "y": 959.37,
+          "width": 560,
+          "height": 27
+        },
+        "time": 2.5,
+        "times": [
+          0.5,
+          2.5,
+          2.625
+        ],
+        "fontPx": 20,
+        "floorPx": 28,
+        "seconds": 3.25,
+        "elements": [
+          {
+            "selector": "#coords",
+            "text": "ARCADIA PLANITIA · 46.0° N 150.0° W",
+            "fontPx": 20,
+            "time": 2.5,
+            "seconds": 3.25
+          },
+          {
+            "selector": "#coords2",
+            "text": "TRANSFER DAY 212 · ENTRY T−00:41:16",
+            "fontPx": 20,
+            "time": 2.625,
+            "seconds": 3.125
+          },
+          {
+            "selector": "#eyebrow-t",
+            "text": "MARS · 2043",
+            "fontPx": 26,
+            "time": 0.5,
+            "seconds": 5.25
+          }
+        ]
+      }
+    ],
+    "enabled": true,
+    "step": 0.125,
+    "samples": 48
+  },
+  "audio": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 1,
+    "findings": [
+      {
+        "code": "audio_none",
+        "severity": "info",
+        "message": "The film has no sound: no clip in it plays audio.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0
+      }
+    ]
+  },
+  "hdr": {
+    "autoPromotion": null,
+    "inspection": "available"
+  },
+  "snapshots": {
+    "enabled": false,
+    "files": [],
+    "times": [],
+    "findingFiles": []
+  }
+}

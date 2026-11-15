@@ -1,0 +1,235 @@
+{
+  "version": 1,
+  "historyId": "01cf98b3-af1d-489e-83c2-4be4ef37df54",
+  "currentRevision": "6137d48d-70b7-40c8-9fc7-5ac6635725e8",
+  "pendingChanges": false,
+  "files": {
+    "AGENTS.md": {
+      "hash": "268ff46777938da818baa92a718571785e9acf2cef2d3ffbacbb93483dcba37a",
+      "content": "C:\\Users\\USER\\.cache\\hyperframes\\history\\01cf98b3-af1d-489e-83c2-4be4ef37df54\\blobs\\26\\268ff46777938da818baa92a718571785e9acf2cef2d3ffbacbb93483dcba37a"
+    },
+    "CLAUDE.md": {
+      "hash": "268ff46777938da818baa92a718571785e9acf2cef2d3ffbacbb93483dcba37a",
+      "content": "C:\\Users\\USER\\.cache\\hyperframes\\history\\01cf98b3-af1d-489e-83c2-4be4ef37df54\\blobs\\26\\268ff46777938da818baa92a718571785e9acf2cef2d3ffbacbb93483dcba37a"
+    },
+    "hyperframes.json": {
+      "hash": "35a6d4ea79ebe911f0d81705f7aace5d8ff0316b745b0311d56af50c9c237cb7",
+      "content": "C:\\Users\\USER\\.cache\\hyperframes\\history\\01cf98b3-af1d-489e-83c2-4be4ef37df54\\blobs\\35\\35a6d4ea79ebe911f0d81705f7aace5d8ff0316b745b0311d56af50c9c237cb7"
+    },
+    "index.html": {
+      "hash": "da527110300d697a29ecf9a955d91baea91ef6717da5581e9115f7312918a5aa",
+      "content": "C:\\Users\\USER\\.cache\\hyperframes\\history\\01cf98b3-af1d-489e-83c2-4be4ef37df54\\blobs\\da\\da527110300d697a29ecf9a955d91baea91ef6717da5581e9115f7312918a5aa"
+    },
+    "meta.json": {
+      "hash": "15eeada6141d84ae0e94ecbc97e7b5343c451c40d4ed5870ba1e94716d353b62",
+      "content": "C:\\Users\\USER\\.cache\\hyperframes\\history\\01cf98b3-af1d-489e-83c2-4be4ef37df54\\blobs\\15\\15eeada6141d84ae0e94ecbc97e7b5343c451c40d4ed5870ba1e94716d353b62"
+    },
+    "package.json": {
+      "hash": "a866f5262ca53a135a8dd164f030479d67ce3a8a6762d9ebb4c720a1538c224d",
+      "content": "C:\\Users\\USER\\.cache\\hyperframes\\history\\01cf98b3-af1d-489e-83c2-4be4ef37df54\\blobs\\a8\\a866f5262ca53a135a8dd164f030479d67ce3a8a6762d9ebb4c720a1538c224d"
+    }
+  },
+  "revisions": {
+    "6137d48d-70b7-40c8-9fc7-5ac6635725e8": {
+      "actor": {
+        "kind": "outside",
+        "name": "Outside"
+      },
+      "label": "Changed outside the app",
+      "startedAt": 1794721386021,
+      "endedAt": 1794721386092,
+      "files": {
+        "index.html": {
+          "before": "C:\\Users\\USER\\.cache\\hyperframes\\history\\01cf98b3-af1d-489e-83c2-4be4ef37df54\\blobs\\43\\439d8b47594cf847e51025e63e7fa2d3f5622b31771290ae3d3d1885d7b47219",
+          "after": "C:\\Users\\USER\\.cache\\hyperframes\\history\\01cf98b3-af1d-489e-83c2-4be4ef37df54\\blobs\\da\\da527110300d697a29ecf9a955d91baea91ef6717da5581e9115f7312918a5aa"
+        }
+      }
+    }
+  },
+  "checks": {
+    "latest": {
+      "revision": "6137d48d-70b7-40c8-9fc7-5ac6635725e8",
+      "id": "84bca70b-b311-4cb9-aa52-c51d8679a1b2"
+    },
+    "revisions": {
+      "6137d48d-70b7-40c8-9fc7-5ac6635725e8": [
+        {
+          "id": "84bca70b-b311-4cb9-aa52-c51d8679a1b2",
+          "scope": "project",
+          "report": "d:\\Cinderfall2\\web\\assets-src\\hf-title\\.hyperframes\\artifacts\\checks\\84bca70b-b311-4cb9-aa52-c51d8679a1b2.json",
+          "metadata": {
+            "ok": true,
+            "browserSkipped": false,
+            "options": {
+              "samples": 9,
+              "atTransitions": false,
+              "maxIssues": 80,
+              "collapseStatic": true,
+              "tolerance": 2,
+              "timeout": 45000,
+              "cache": true,
+              "contrast": true,
+              "craft": true,
+              "strict": false,
+              "snapshots": false,
+              "safeZones": [
+                "tiktok",
+                "reels",
+                "shorts"
+              ],
+              "browserGpuMode": "auto",
+              "includeUnmounted": false
+            }
+          },
+          "createdAt": 1794721397516,
+          "contentHash": "eb3d4048e235b7962d1f280d08010bde5747e45a22d11f52d9a253a2ccd0547d",
+          "revision": "6137d48d-70b7-40c8-9fc7-5ac6635725e8",
+          "inputFingerprint": "4b92759fc09c20076df803cc134b5bd8771be13e3450a47d19facb5aa8389d3f",
+          "inputScope": "local-project-files",
+          "attribution": "recorded-revision"
+        }
+      ]
+    },
+    "unversioned": [
+      {
+        "id": "16e67b9c-f684-4cca-99b3-c7998828c205",
+        "scope": "project",
+        "report": "D:\\Cinderfall2\\web\\assets-src\\hf-title\\.hyperframes\\artifacts\\checks\\16e67b9c-f684-4cca-99b3-c7998828c205.json",
+        "metadata": {
+          "ok": false,
+          "browserSkipped": false,
+          "options": {
+            "samples": 9,
+            "atTransitions": false,
+            "maxIssues": 80,
+            "collapseStatic": true,
+            "tolerance": 2,
+            "timeout": 45000,
+            "cache": true,
+            "contrast": true,
+            "craft": true,
+            "strict": false,
+            "snapshots": false,
+            "safeZones": [
+              "tiktok",
+              "reels",
+              "shorts"
+            ],
+            "browserGpuMode": "auto",
+            "includeUnmounted": false
+          }
+        },
+        "createdAt": 1794721333896,
+        "contentHash": "deacbf6d2a387de6332c24a9621d20fddb8acca2f3982ad2be77ec194fb1a854",
+        "revision": null,
+        "inputFingerprint": "55ed45644928582cd8a64c8dba690169b4ebfdfd4073322509db6f5ba2f98a83",
+        "inputScope": "local-project-files",
+        "attribution": "unversioned"
+      }
+    ]
+  },
+  "snapshots": {
+    "latest": {
+      "revision": "6137d48d-70b7-40c8-9fc7-5ac6635725e8",
+      "id": "3522bf3e-25af-4ed8-ab63-7f2fb26c6af3-3"
+    },
+    "revisions": {
+      "6137d48d-70b7-40c8-9fc7-5ac6635725e8": [
+        {
+          "scope": "full",
+          "id": "3522bf3e-25af-4ed8-ab63-7f2fb26c6af3-0",
+          "image": "d:\\Cinderfall2\\web\\assets-src\\hf-title\\.hyperframes\\artifacts\\snapshots\\263d44f1-28ef-4822-b7ab-05d6ecda1d53\\frame-00-at-1s.png",
+          "time": 1,
+          "metadata": {
+            "width": 1920,
+            "height": 1080,
+            "zoomScale": 1,
+            "browserGpuMode": "auto",
+            "warnings": [],
+            "partial": false
+          },
+          "createdAt": 1794721413878,
+          "contentHash": "a63bd10594cab48d2f679674504298b35395d24ee51b7274d9eb84166c277c63",
+          "revision": "6137d48d-70b7-40c8-9fc7-5ac6635725e8",
+          "inputFingerprint": "4b92759fc09c20076df803cc134b5bd8771be13e3450a47d19facb5aa8389d3f",
+          "inputScope": "local-project-files",
+          "attribution": "recorded-revision"
+        },
+        {
+          "scope": "full",
+          "id": "3522bf3e-25af-4ed8-ab63-7f2fb26c6af3-1",
+          "image": "d:\\Cinderfall2\\web\\assets-src\\hf-title\\.hyperframes\\artifacts\\snapshots\\263d44f1-28ef-4822-b7ab-05d6ecda1d53\\frame-01-at-3s.png",
+          "time": 3,
+          "metadata": {
+            "width": 1920,
+            "height": 1080,
+            "zoomScale": 1,
+            "browserGpuMode": "auto",
+            "warnings": [],
+            "partial": false
+          },
+          "createdAt": 1794721413878,
+          "contentHash": "901e47b567cff237060380913ed639a2f7f438cac0e02334bc379253338aa888",
+          "revision": "6137d48d-70b7-40c8-9fc7-5ac6635725e8",
+          "inputFingerprint": "4b92759fc09c20076df803cc134b5bd8771be13e3450a47d19facb5aa8389d3f",
+          "inputScope": "local-project-files",
+          "attribution": "recorded-revision"
+        },
+        {
+          "scope": "full",
+          "id": "3522bf3e-25af-4ed8-ab63-7f2fb26c6af3-2",
+          "image": "d:\\Cinderfall2\\web\\assets-src\\hf-title\\.hyperframes\\artifacts\\snapshots\\263d44f1-28ef-4822-b7ab-05d6ecda1d53\\frame-02-at-5.5s.png",
+          "time": 5.5,
+          "metadata": {
+            "width": 1920,
+            "height": 1080,
+            "zoomScale": 1,
+            "browserGpuMode": "auto",
+            "warnings": [],
+            "partial": false
+          },
+          "createdAt": 1794721413878,
+          "contentHash": "bc3d3e5df99ea07cad6efbd7f4b8bb8165a69f9ceacf0f6c57229e63d6fbb525",
+          "revision": "6137d48d-70b7-40c8-9fc7-5ac6635725e8",
+          "inputFingerprint": "4b92759fc09c20076df803cc134b5bd8771be13e3450a47d19facb5aa8389d3f",
+          "inputScope": "local-project-files",
+          "attribution": "recorded-revision"
+        },
+        {
+          "scope": "full",
+          "id": "3522bf3e-25af-4ed8-ab63-7f2fb26c6af3-3",
+          "image": "d:\\Cinderfall2\\web\\assets-src\\hf-title\\.hyperframes\\artifacts\\snapshots\\263d44f1-28ef-4822-b7ab-05d6ecda1d53\\frame-03-at-5.82s.png",
+          "time": 5.82,
+          "metadata": {
+            "width": 1920,
+            "height": 1080,
+            "zoomScale": 1,
+            "browserGpuMode": "auto",
+            "warnings": [],
+            "partial": false
+          },
+          "createdAt": 1794721413878,
+          "contentHash": "9e644345282441b53de70ff29d57575b8cb201c1df1803e524c56dfeb4e8eafb",
+          "revision": "6137d48d-70b7-40c8-9fc7-5ac6635725e8",
+          "inputFingerprint": "4b92759fc09c20076df803cc134b5bd8771be13e3450a47d19facb5aa8389d3f",
+          "inputScope": "local-project-files",
+          "attribution": "recorded-revision"
+        }
+      ]
+    },
+    "unversioned": []
+  },
+  "renders": {
+    "latest": {
+      "id": "3bbc50a6-bace-4f24-956f-0137f7a03ed4",
+      "completedAt": 1794721611347,
+      "output": "d:\\Cinderfall2\\web\\public\\assets\\video\\title_expedition02.webm",
+      "status": "completed",
+      "revision": "6137d48d-70b7-40c8-9fc7-5ac6635725e8"
+    },
+    "retainedRevisions": [
+      "6137d48d-70b7-40c8-9fc7-5ac6635725e8"
+    ]
+  },
+  "pendingArtifactCleanup": []
+}

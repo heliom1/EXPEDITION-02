@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+    <style>
+      :root { --ink: #f6eee6; --muted: #c9b8a8; --accent: #e8742c; --cool: #8fd6ff; --font-display: 'Outfit'; --font-mono: 'IBM Plex Mono'; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #000; }
+      #root { position: relative; width: 1920px; height: 1080px; font-family: var(--font-display); color: var(--ink); }
+      video { position: absolute; inset: 0; width: 1920px; height: 1080px; object-fit: cover; z-index: 1; }
+      .panel-host { position: absolute; inset: 0; z-index: 3; background: radial-gradient(ellipse at 50% 40%, #2a1209 0%, #0b0605 70%); }
+      .panel { position: absolute; left: 260px; top: 170px; width: 1400px; min-height: 560px; padding: 44px 56px; background: rgba(18, 11, 9, 0.88); border: 1px solid rgba(232, 116, 44, 0.35); border-top: 3px solid var(--accent); }
+      .concept { position: absolute; right: 20px; top: -34px; font: 500 18px var(--font-mono); letter-spacing: 0.18em; color: rgba(255, 210, 170, 0.55); }
+      .ph { font-size: 34px; letter-spacing: 0.2em; font-weight: 500; margin-bottom: 36px; }
+      .ph small { font: 400 20px var(--font-mono); letter-spacing: 0.1em; color: var(--muted); margin-left: 24px; }
+      .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 26px 60px; margin: 18px 0 26px; }
+      .res { display: grid; grid-template-columns: 210px 1fr 90px; align-items: center; gap: 18px; font: 500 22px var(--font-mono); letter-spacing: 0.1em; }
+      .rb { height: 14px; background: rgba(255, 255, 255, 0.08); }
+      .rb i { display: block; height: 100%; background: linear-gradient(90deg, #6cc24a, #a8e070); }
+      .warnable .rb i { background: linear-gradient(90deg, #3fa4e8, #8fd6ff); }
+      .rv { color: var(--muted); text-align: right; }
+      .alert { margin-top: 10px; padding: 16px 22px; font: 600 24px var(--font-mono); letter-spacing: 0.08em; color: #ffd0b0; background: rgba(255, 90, 54, 0.18); border-left: 4px solid #ff5a36; }
+      .btns { display: flex; gap: 24px; margin-top: 30px; }
+      .btn { display: inline-block; padding: 14px 34px; font: 600 24px var(--font-display); letter-spacing: 0.24em; border: 2px solid var(--accent); background: rgba(232, 116, 44, 0.25); }
+      .btn.ghost { background: none; border-color: rgba(255, 255, 255, 0.25); color: var(--muted); }
+      .cursor { position: absolute; left: 0; top: 0; width: 26px; height: 26px; border: 3px solid #fff; border-radius: 50%; box-shadow: 0 0 12px rgba(255, 255, 255, 0.7); }
+      .loop { display: flex; align-items: stretch; gap: 18px; margin: 20px 0 30px; }
+      .node { flex: 1; padding: 24px; border: 1px solid rgba(232, 116, 44, 0.4); background: rgba(232, 116, 44, 0.07); }
+      .node b { display: block; font-size: 24px; letter-spacing: 0.12em; margin-bottom: 12px; }
+      .node span { font: 400 20px/1.5 var(--font-mono); color: var(--muted); }
+      .arr { align-self: center; font-size: 40px; color: var(--accent); }
+      .prio { display: grid; gap: 14px; }
+      .pr { display: flex; justify-content: space-between; padding: 16px 24px; font: 600 24px var(--font-mono); letter-spacing: 0.1em; background: rgba(255, 255, 255, 0.03); border-left: 4px solid #6cc24a; }
+      .pr span { color: var(--muted); }
+      .pr.off { border-left-color: #ff5a36; opacity: 0.6; }
+      .fleet { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; }
+      .rov { padding: 24px; border: 1px solid rgba(255, 255, 255, 0.15); }
+      .rov b { display: block; font-size: 28px; letter-spacing: 0.2em; margin-bottom: 16px; }
+      .ex { padding: 14px 16px; margin-top: 10px; font: 500 21px var(--font-mono); background: rgba(232, 116, 44, 0.08); }
+      .repair { display: flex; align-items: center; justify-content: center; gap: 50px; margin: 40px 0; }
+      .slot { width: 420px; padding: 50px 20px; text-align: center; font: 600 26px var(--font-mono); letter-spacing: 0.12em; border: 2px dashed rgba(255, 90, 54, 0.6); }
+      .slot.new { border: 2px solid #6cc24a; color: #c8f5b0; }
+      .ok { font: 700 34px var(--font-display); letter-spacing: 0.2em; color: #9fe08a; text-align: center; }
+      .big1, .big2, .big3 { text-align: center; font-weight: 300; letter-spacing: 0.24em; margin: 34px 0; }
+      .big1 { font-size: 64px; color: #fff; } .big2 { font-size: 46px; color: var(--cool); } .big3 { font-size: 46px; color: var(--accent); }
+      .recs { display: grid; gap: 18px; }
+      .rec { padding: 18px 26px; font: 500 26px var(--font-mono); letter-spacing: 0.08em; border-left: 4px solid var(--accent); background: rgba(255, 255, 255, 0.04); }
+      .rec i { color: #ff8a6a; font-style: normal; }
+      .link { margin-top: 34px; font: 600 28px var(--font-mono); letter-spacing: 0.16em; color: var(--cool); }
+      .lower { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
+      .lt { position: absolute; left: 120px; bottom: 120px; padding: 16px 26px 18px; background: rgba(10, 6, 4, 0.72); border-left: 4px solid var(--accent); }
+      .lt b { display: block; font-size: 34px; letter-spacing: 0.22em; font-weight: 600; }
+      .lt span { display: block; margin-top: 8px; font: 500 24px var(--font-mono); letter-spacing: 0.12em; color: #ffd2a8; }
+      #title1 { position: absolute; inset: 0; z-index: 6; display: grid; place-content: center; text-align: center; }
+      #title1 .t b { display: block; font-size: 130px; font-weight: 300; letter-spacing: 0.26em; text-shadow: 0 4px 40px rgba(0, 0, 0, 0.6); }
+      #title1 .t b em { font-style: normal; font-weight: 600; color: var(--accent); }
+      #title1 .t span { display: block; margin-top: 20px; font-size: 32px; letter-spacing: 0.7em; color: var(--muted); }
+      #endcard { position: absolute; inset: 0; z-index: 7; background: radial-gradient(ellipse at 50% 50%, #2b1208 0%, #000 70%); display: grid; place-content: center; text-align: center; }
+      #endcard .e1 { font-size: 150px; font-weight: 300; letter-spacing: 0.24em; }
+      #endcard .e1 em { font-style: normal; font-weight: 600; color: var(--accent); }
+      #endcard .e2 { margin-top: 26px; font-size: 40px; letter-spacing: 0.3em; }
+      #endcard .e3 { margin-top: 22px; font-size: 28px; letter-spacing: 0.7em; color: var(--muted); }
+      #fade, #flash { position: absolute; inset: 0; z-index: 9; }
+      #fade { background: #000; } #flash { background: #fff; opacity: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="150" data-width="1920" data-height="1080">
+      <video id="v0" class="clip" data-start="0" data-duration="2.5" data-track-index="1" src="assets/clips/menu_orbit.mp4" muted playsinline></video>
+      <video id="v1" class="clip" data-start="2.5" data-duration="2.2" data-track-index="1" src="assets/clips/space_journey.mp4" muted playsinline></video>
+      <video id="v2" class="clip" data-start="4.7" data-duration="1.7" data-track-index="1" src="assets/clips/space_entry.mp4" muted playsinline></video>
+      <video id="v3" class="clip" data-start="6.4" data-duration="2" data-track-index="1" src="assets/clips/land_touchdown.mp4" muted playsinline></video>
+      <video id="v4" class="clip" data-start="8.4" data-duration="1.8" data-track-index="1" src="assets/clips/outpost_walk.mp4" muted playsinline></video>
+      <video id="v5" class="clip" data-start="10.2" data-duration="4.8" data-track-index="1" src="assets/clips/monitoring.mp4" muted playsinline></video>
+      <video id="v6" class="clip" data-start="26.2" data-duration="4.6" data-track-index="1" src="assets/clips/farm_dolly.mp4" muted playsinline></video>
+      <video id="v7" class="clip" data-start="30.8" data-duration="3.8" data-track-index="1" src="assets/clips/farm_use.mp4" muted playsinline></video>
+      <video id="v8" class="clip" data-start="41" data-duration="4.8" data-track-index="1" src="assets/clips/reactor.mp4" muted playsinline></video>
+      <video id="v9" class="clip" data-start="50.5" data-duration="5.5" data-track-index="1" src="assets/clips/storm.mp4" muted playsinline></video>
+      <video id="v10" class="clip" data-start="56" data-duration="3.5" data-track-index="1" src="assets/clips/shields.mp4" muted playsinline></video>
+      <video id="v11" class="clip" data-start="59.5" data-duration="3.9" data-track-index="1" src="assets/clips/oxygen.mp4" muted playsinline></video>
+      <video id="v12" class="clip" data-start="68.4" data-duration="3.2" data-track-index="1" src="assets/clips/panel.mp4" muted playsinline></video>
+      <video id="v13" class="clip" data-start="71.6" data-duration="4.8" data-track-index="1" src="assets/clips/garage.mp4" muted playsinline></video>
+      <video id="v14" class="clip" data-start="82.4" data-duration="2.8" data-track-index="1" src="assets/clips/mev_drive.mp4" muted playsinline></video>
+      <video id="v15" class="clip" data-start="85.2" data-duration="5.6" data-track-index="1" src="assets/clips/r1_remote.mp4" muted playsinline></video>
+      <video id="v16" class="clip" data-start="97.2" data-duration="3.8" data-track-index="1" src="assets/clips/pda_rover.mp4" muted playsinline></video>
+      <video id="v17" class="clip" data-start="106.4" data-duration="4.8" data-track-index="1" src="assets/clips/drill.mp4" muted playsinline></video>
+      <video id="v18" class="clip" data-start="111.2" data-duration="5.4" data-track-index="1" src="assets/clips/samples.mp4" muted playsinline></video>
+      <video id="v19" class="clip" data-start="121.8" data-duration="3.8" data-track-index="1" src="assets/clips/holo.mp4" muted playsinline></video>
+      <video id="v20" class="clip" data-start="125.6" data-duration="3.6" data-track-index="1" src="assets/clips/station.mp4" muted playsinline></video>
+      <video id="v21" class="clip" data-start="133.2" data-duration="2.6" data-track-index="1" src="assets/clips/ice_enter.mp4" muted playsinline></video>
+      <video id="v22" class="clip" data-start="135.8" data-duration="2.4" data-track-index="1" src="assets/clips/ice_crystals.mp4" muted playsinline></video>
+      <video id="v23" class="clip" data-start="138.2" data-duration="1" data-track-index="1" src="assets/clips/monitoring.mp4" muted playsinline></video>
+      <video id="v24" class="clip" data-start="139.2" data-duration="1" data-track-index="1" src="assets/clips/farm_use.mp4" muted playsinline></video>
+      <video id="v25" class="clip" data-start="140.2" data-duration="1" data-track-index="1" src="assets/clips/reactor.mp4" muted playsinline></video>
+      <video id="v26" class="clip" data-start="141.2" data-duration="1" data-track-index="1" src="assets/clips/oxygen.mp4" muted playsinline></video>
+      <video id="v27" class="clip" data-start="142.2" data-duration="1" data-track-index="1" src="assets/clips/r1_remote.mp4" muted playsinline></video>
+      <video id="v28" class="clip" data-start="143.2" data-duration="1" data-track-index="1" src="assets/clips/samples.mp4" muted playsinline></video>
+      <video id="v29" class="clip" data-start="144.2" data-duration="1" data-track-index="1" src="assets/clips/ice_crystals.mp4" muted playsinline></video>
+      <div id="p_monitor" class="clip panel-host" data-start="15" data-duration="11.2" data-track-index="3"><div class="panel" id="p_monitor_in"><div class="concept">CONCEPT UI · SYSTEM IN DEVELOPMENT</div><div class="ph">CENTRAL MONITORING SYSTEM <small>SOL 14 · 07:02</small></div>
+    <div class="grid2"><div class="res "><div class="rn">ELECTRICITY</div><div class="rb"><i id="b_el" style="width:86%"></i></div><div class="rv" id="b_elv">86%</div></div><div class="res "><div class="rn">FOOD</div><div class="rb"><i id="b_fo" style="width:64%"></i></div><div class="rv" id="b_fov">64%</div></div><div class="res warnable"><div class="rn">OXYGEN</div><div class="rb"><i id="b_ox" style="width:91%"></i></div><div class="rv" id="b_oxv">91%</div></div><div class="res "><div class="rn">WATER</div><div class="rb"><i id="b_wa" style="width:72%"></i></div><div class="rv" id="b_wav">72%</div></div></div>
+    <div class="alert" id="m_alert">⚠ OXYGEN FILTER EFFICIENCY 41% — MAINTENANCE REQUIRED</div>
+    <div class="btns"><span class="btn" id="m_btn">RESPOND</span><span class="btn ghost">LOG</span></div>
+    <div class="cursor" id="m_cur"></div></div></div>
+      <div id="p_food" class="clip panel-host" data-start="34.6" data-duration="6.4" data-track-index="3"><div class="panel" id="p_food_in"><div class="concept">CONCEPT UI · SYSTEM IN DEVELOPMENT</div><div class="ph">FOOD PRODUCTION LOOP</div>
+    <div class="loop"><div class="node" id="f1"><b>INDOOR FARM</b><span>Lettuce · potato · soy<br>Harvest in 2 sols</span></div><div class="arr">→</div>
+    <div class="node" id="f2"><b>FUNGAL CULTIVATION</b><span>Mycoprotein trays<br>Growth 74%</span></div><div class="arr">→</div>
+    <div class="node" id="f3"><b>ORGANIC LEFTOVERS</b><span>Collected 3.2 kg</span></div><div class="arr">→</div>
+    <div class="node" id="f4"><b>BIOPROCESSING</b><span>Nutrients recovered<br>N · P · K → farm</span></div></div></div></div>
+      <div id="p_power" class="clip panel-host" data-start="45.8" data-duration="4.7" data-track-index="3"><div class="panel" id="p_power_in"><div class="concept">CONCEPT UI · SYSTEM IN DEVELOPMENT</div><div class="ph">POWER DISTRIBUTION <small>REACTOR 40.2 kW · SOLAR 3.1 kW · BATTERY 78%</small></div>
+    <div class="prio"><div class="pr on">1 · LIFE SUPPORT<span>31.5 kW</span></div><div class="pr on">2 · OXYGEN GENERATION<span>4.0 kW</span></div><div class="pr on">3 · FARM LIGHTING<span>2.4 kW</span></div><div class="pr off" id="pw_off">4 · LABORATORY<span>SHED</span></div><div class="pr" id="pw_sh">5 · MAGNETIC SHIELD<span>STANDBY → +6 kW</span></div></div></div></div>
+      <div id="p_oxygen" class="clip panel-host" data-start="63.4" data-duration="5" data-track-index="3"><div class="panel" id="p_oxygen_in"><div class="concept">CONCEPT UI · SYSTEM IN DEVELOPMENT</div><div class="ph">OXYGEN PRODUCTION · MOXIE-CLASS SOLID-OXIDE ELECTROLYSIS</div>
+    <div class="loop"><div class="node"><b>MARTIAN CO₂</b><span>Intake 6.1 mbar</span></div><div class="arr">→</div><div class="node" id="o2"><b>ELECTROLYSIS 800 °C</b><span>2 CO₂ → 2 CO + O₂</span></div><div class="arr">→</div><div class="node"><b>O₂ STORAGE</b><span>Purity 99.6%<br>Tank 68%</span></div></div>
+    <div class="grid2"><div class="res "><div class="rn">PRODUCTION</div><div class="rb"><i id="b_o2p" style="width:82%"></i></div><div class="rv" id="b_o2pv">82%</div></div><div class="res "><div class="rn">POWER DRAW</div><div class="rb"><i id="b_o2w" style="width:46%"></i></div><div class="rv" id="b_o2wv">46%</div></div></div></div></div>
+      <div id="p_fleet" class="clip panel-host" data-start="76.4" data-duration="6" data-track-index="3"><div class="panel" id="p_fleet_in"><div class="concept">CONCEPT UI · SYSTEM IN DEVELOPMENT</div><div class="ph">ROVER MANAGEMENT · SELECT DESTINATION</div>
+    <div class="fleet"><div class="rov" id="rov0"><b>ROVER A</b><div class="ex " id="ex0a">EXP 1 · Valles Rim</div><div class="ex" id="ex0b">EXP 2 · Ancient Delta</div></div><div class="rov" id="rov1"><b>ROVER B</b><div class="ex " id="ex1a">EXP 3 · Basalt Plains</div><div class="ex" id="ex1b">EXP 4 · Dune Field</div></div><div class="rov" id="rov2"><b>ROVER C</b><div class="ex sel" id="ex2a">EXP 5 · Cliff Base</div><div class="ex" id="ex2b">EXP 6 · Polar Margin</div></div></div>
+    <div class="btns"><span class="btn" id="dep_btn">DEPLOY ROVER C</span></div><div class="cursor" id="f_cur"></div></div></div>
+      <div id="p_health" class="clip panel-host" data-start="90.8" data-duration="6.4" data-track-index="3"><div class="panel" id="p_health_in"><div class="concept">CONCEPT UI · SYSTEM IN DEVELOPMENT</div><div class="ph">ROVER C · EXPEDITION 5 · CLIFF BASE <small>AUTONOMOUS</small></div>
+    <div class="grid2"><div class="res warnable"><div class="rn">CONDITION</div><div class="rb"><i id="h_hp" style="width:92%"></i></div><div class="rv" id="h_hpv">92%</div></div><div class="res "><div class="rn">BATTERY</div><div class="rb"><i id="h_bt" style="width:74%"></i></div><div class="rv" id="h_btv">74%</div></div><div class="res "><div class="rn">SIGNAL</div><div class="rb"><i id="h_cm" style="width:88%"></i></div><div class="rv" id="h_cmv">88%</div></div><div class="res "><div class="rn">PROGRESS</div><div class="rb"><i id="h_pr" style="width:35%"></i></div><div class="rv" id="h_prv">35%</div></div></div>
+    <div class="alert" id="h_alert">⚠ WHEEL 4 DAMAGE · CONDITION FALLING</div>
+    <div class="btns"><span class="btn ghost">CONTINUE</span><span class="btn" id="rc_btn">RECALL</span></div><div class="cursor" id="h_cur"></div></div></div>
+      <div id="p_repair" class="clip panel-host" data-start="101" data-duration="5.4" data-track-index="3"><div class="panel" id="p_repair_in"><div class="concept">CONCEPT UI · SYSTEM IN DEVELOPMENT</div><div class="ph">REPAIR · ROVER C RETRIEVED <small>FAILURE: DRIVE ACTUATOR</small></div>
+    <div class="repair"><div class="slot" id="rp1">OLD ACTUATOR</div><div class="arr">⇄</div><div class="slot new" id="rp2">REPLACEMENT PART</div></div>
+    <div class="grid2"><div class="res "><div class="rn">REPAIR</div><div class="rb"><i id="rp_b" style="width:0%"></i></div><div class="rv" id="rp_bv">0%</div></div></div><div class="ok" id="rp_ok">✓ ROVER C OPERATIONAL</div></div></div>
+      <div id="p_results" class="clip panel-host" data-start="116.6" data-duration="5.2" data-track-index="3"><div class="panel" id="p_results_in"><div class="concept">CONCEPT UI · SYSTEM IN DEVELOPMENT</div><div class="big1" id="r1">EXPEDITION COMPLETED</div><div class="big2" id="r2">SCIENTIFIC DISCOVERY UNLOCKED</div><div class="big3" id="r3">NEW DESTINATION AVAILABLE</div></div></div>
+      <div id="p_records" class="clip panel-host" data-start="129.2" data-duration="4" data-track-index="3"><div class="panel" id="p_records_in"><div class="concept">CONCEPT UI · SYSTEM IN DEVELOPMENT</div><div class="ph">EXPEDITION 1 ARCHIVE</div>
+    <div class="recs"><div class="rec" id="rc1">SURVEY LOG 214 · <i>[RECORD TRUNCATED]</i></div><div class="rec" id="rc2">TRANSMISSION 2035 · <i>[SIGNAL LOST]</i></div><div class="rec" id="rc3">CORE DRL-2 · HYDROGEN ANOMALY</div><div class="rec" id="rc4">SITE C-09 · STATUS: INCOMPLETE</div></div>
+    <div class="link" id="rc_link">● ● ● → NEW UNEXPLORED DESTINATION</div></div></div>
+      <div id="l_base" class="clip lower" data-start="10.6" data-duration="4.2" data-track-index="5"><div class="lt"><b>DAILY BASE CHECK</b><span>ELECTRICITY · FOOD · OXYGEN · WATER</span></div></div>
+      <div id="l_food" class="clip lower" data-start="26.6" data-duration="7.8" data-track-index="5"><div class="lt"><b>FOOD PRODUCTION</b><span>GROW → HARVEST → RECOVER → REUSE</span></div></div>
+      <div id="l_power" class="clip lower" data-start="41.4" data-duration="4.2" data-track-index="5"><div class="lt"><b>POWER MANAGEMENT</b><span>GENERATE → DISTRIBUTE → PRIORITIZE</span></div></div>
+      <div id="l_storm" class="clip lower" data-start="50.9" data-duration="5" data-track-index="5"><div class="lt"><b>DUST STORM</b><span>SOLAR OUTPUT −62% · RUNNING ON REACTOR + BATTERY</span></div></div>
+      <div id="l_shield" class="clip lower" data-start="56.3" data-duration="3" data-track-index="5"><div class="lt"><b>SOLAR EVENT</b><span>MAGNETIC SHIELDING ACTIVATED</span></div></div>
+      <div id="l_oxygen" class="clip lower" data-start="59.9" data-duration="3.3" data-track-index="5"><div class="lt"><b>OXYGEN MANAGEMENT</b><span>PRODUCE → MONITOR → MAINTAIN</span></div></div>
+      <div id="l_repair" class="clip lower" data-start="68.7" data-duration="2.8" data-track-index="5"><div class="lt"><b>MAINTENANCE</b><span>FAILED EQUIPMENT MUST BE REPAIRED</span></div></div>
+      <div id="l_rovers" class="clip lower" data-start="72" data-duration="4.2" data-track-index="5"><div class="lt"><b>3 EXPLORATION ROVERS</b><span>6 TOTAL EXPEDITIONS</span></div></div>
+      <div id="l_travel" class="clip lower" data-start="82.6" data-duration="2.4" data-track-index="5"><div class="lt"><b>ROVER DEPLOYED</b><span>EN ROUTE TO DESTINATION</span></div></div>
+      <div id="l_monitor" class="clip lower" data-start="85.5" data-duration="5" data-track-index="5"><div class="lt"><b>MONITOR → DECIDE → RECALL → RETRIEVE → REPAIR</b><span>ROVER CONDITION DECLINES ON DIFFICULT TERRAIN</span></div></div>
+      <div id="l_pda" class="clip lower" data-start="97.5" data-duration="3.3" data-track-index="5"><div class="lt"><b>PDA · ROVER TELEMETRY</b><span>LIVE STATUS AND CAMERA FEED</span></div></div>
+      <div id="l_science" class="clip lower" data-start="106.8" data-duration="9.4" data-track-index="5"><div class="lt"><b>SCIENTIFIC DISCOVERY</b><span>SAMPLES · GEOLOGY · ENVIRONMENTAL DATA</span></div></div>
+      <div id="l_mystery" class="clip lower" data-start="122.2" data-duration="6.8" data-track-index="5"><div class="lt"><b>FIRST EXPEDITION</b><span>INCOMPLETE RECORDS · UNEXPLAINED DISCOVERIES</span></div></div>
+      <div id="l_truth" class="clip lower" data-start="133.4" data-duration="4.6" data-track-index="5"><div class="lt"><b>THE TRUTH REMAINS HIDDEN</b></div></div>
+      <div id="title1" class="clip" data-start="0" data-duration="4.8" data-track-index="6"><div class="t"><b>EXPEDITION <em>02</em></b><span>SURVIVE. MANAGE. EXPLORE.</span></div></div>
+      <div id="endcard" class="clip" data-start="145.2" data-duration="4.8" data-track-index="7"><div class="e1">EXPEDITION <em>02</em></div><div class="e2">YOUR MISSION IS JUST BEGINNING.</div><div class="e3">EXPLORE. DISCOVER. SURVIVE.</div></div>
+      <div id="fade" class="clip" data-start="0" data-duration="1" data-track-index="8"></div>
+      <div id="flash" class="clip" data-start="145.1" data-duration="0.4" data-track-index="8"></div>
+      <audio id="vo_s1" class="clip" data-start="0.5" data-duration="9.15" data-track-index="10" src="assets/vo/s1.mp3" data-volume="1"></audio>
+      <audio id="vo_s2" class="clip" data-start="10.4" data-duration="15.23" data-track-index="10" src="assets/vo/s2.mp3" data-volume="1"></audio>
+      <audio id="vo_s3a" class="clip" data-start="26.6" data-duration="13.93" data-track-index="10" src="assets/vo/s3a.mp3" data-volume="1"></audio>
+      <audio id="vo_s3b" class="clip" data-start="41.3" data-duration="17.79" data-track-index="10" src="assets/vo/s3b.mp3" data-volume="1"></audio>
+      <audio id="vo_s3c" class="clip" data-start="59.8" data-duration="11.24" data-track-index="10" src="assets/vo/s3c.mp3" data-volume="1"></audio>
+      <audio id="vo_s4" class="clip" data-start="72" data-duration="12.77" data-track-index="10" src="assets/vo/s4.mp3" data-volume="1"></audio>
+      <audio id="vo_s5" class="clip" data-start="85.6" data-duration="20.25" data-track-index="10" src="assets/vo/s5.mp3" data-volume="1"></audio>
+      <audio id="vo_s6" class="clip" data-start="106.8" data-duration="14.40" data-track-index="10" src="assets/vo/s6.mp3" data-volume="1"></audio>
+      <audio id="vo_s7" class="clip" data-start="122.2" data-duration="15.33" data-track-index="10" src="assets/vo/s7.mp3" data-volume="1"></audio>
+      <audio id="vo_s8" class="clip" data-start="138.6" data-duration="5.80" data-track-index="10" src="assets/vo/s8.mp3" data-volume="1"></audio>
+      <audio id="mus0" class="clip" data-start="0" data-duration="22" data-track-index="11" src="assets/music/bed_surface.mp3" data-volume="0.22" data-fade-in="2"></audio>
+      <audio id="mus1" class="clip" data-start="22" data-duration="22" data-track-index="11" src="assets/music/bed_surface.mp3" data-volume="0.22"></audio>
+      <audio id="mus2" class="clip" data-start="44" data-duration="22" data-track-index="11" src="assets/music/bed_surface.mp3" data-volume="0.22"></audio>
+      <audio id="mus3" class="clip" data-start="66" data-duration="22" data-track-index="11" src="assets/music/bed_surface.mp3" data-volume="0.22"></audio>
+      <audio id="mus4" class="clip" data-start="88" data-duration="22" data-track-index="11" src="assets/music/bed_surface.mp3" data-volume="0.22"></audio>
+      <audio id="mus5" class="clip" data-start="110" data-duration="22" data-track-index="11" src="assets/music/bed_surface.mp3" data-volume="0.22"></audio>
+      <audio id="mus6" class="clip" data-start="121.8" data-duration="22" data-track-index="12" src="assets/music/bed_cave.mp3" data-volume="0.3" data-fade-in="1.5"></audio>
+      <audio id="sting1" class="clip" data-start="116.6" data-duration="4.5" data-track-index="13" src="assets/music/sting_discovery.mp3" data-volume="0.5"></audio>
+      <audio id="sting2" class="clip" data-start="145.2" data-duration="4.8" data-track-index="13" src="assets/music/sting_discovery.mp3" data-volume="0.6"></audio>
+    </div>
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo("#p_monitor_in", {"opacity":0,"y":24,"scale":0.98}, {"opacity":1,"y":0,"scale":1,"duration":0.5,"ease":"power3.out"}, 15.05);
+      tl.fromTo("#p_monitor_in", {"opacity":1}, {"opacity":0,"duration":0.35,"ease":"power2.in"}, 25.8);
+      tl.fromTo("#p_food_in", {"opacity":0,"y":24,"scale":0.98}, {"opacity":1,"y":0,"scale":1,"duration":0.5,"ease":"power3.out"}, 34.65);
+      tl.fromTo("#p_food_in", {"opacity":1}, {"opacity":0,"duration":0.35,"ease":"power2.in"}, 40.6);
+      tl.fromTo("#p_power_in", {"opacity":0,"y":24,"scale":0.98}, {"opacity":1,"y":0,"scale":1,"duration":0.5,"ease":"power3.out"}, 45.849999999999994);
+      tl.fromTo("#p_power_in", {"opacity":1}, {"opacity":0,"duration":0.35,"ease":"power2.in"}, 50.1);
+      tl.fromTo("#p_oxygen_in", {"opacity":0,"y":24,"scale":0.98}, {"opacity":1,"y":0,"scale":1,"duration":0.5,"ease":"power3.out"}, 63.449999999999996);
+      tl.fromTo("#p_oxygen_in", {"opacity":1}, {"opacity":0,"duration":0.35,"ease":"power2.in"}, 68);
+      tl.fromTo("#p_fleet_in", {"opacity":0,"y":24,"scale":0.98}, {"opacity":1,"y":0,"scale":1,"duration":0.5,"ease":"power3.out"}, 76.45);
+      tl.fromTo("#p_fleet_in", {"opacity":1}, {"opacity":0,"duration":0.35,"ease":"power2.in"}, 82);
+      tl.fromTo("#p_health_in", {"opacity":0,"y":24,"scale":0.98}, {"opacity":1,"y":0,"scale":1,"duration":0.5,"ease":"power3.out"}, 90.85);
+      tl.fromTo("#p_health_in", {"opacity":1}, {"opacity":0,"duration":0.35,"ease":"power2.in"}, 96.8);
+      tl.fromTo("#p_repair_in", {"opacity":0,"y":24,"scale":0.98}, {"opacity":1,"y":0,"scale":1,"duration":0.5,"ease":"power3.out"}, 101.05);
+      tl.fromTo("#p_repair_in", {"opacity":1}, {"opacity":0,"duration":0.35,"ease":"power2.in"}, 106);
+      tl.fromTo("#p_results_in", {"opacity":0,"y":24,"scale":0.98}, {"opacity":1,"y":0,"scale":1,"duration":0.5,"ease":"power3.out"}, 116.64999999999999);
+      tl.fromTo("#p_results_in", {"opacity":1}, {"opacity":0,"duration":0.35,"ease":"power2.in"}, 121.39999999999999);
+      tl.fromTo("#p_records_in", {"opacity":0,"y":24,"scale":0.98}, {"opacity":1,"y":0,"scale":1,"duration":0.5,"ease":"power3.out"}, 129.25);
+      tl.fromTo("#p_records_in", {"opacity":1}, {"opacity":0,"duration":0.35,"ease":"power2.in"}, 132.79999999999998);
+      tl.fromTo("#l_base .lt", {"opacity":0,"x":-20}, {"opacity":1,"x":0,"duration":0.45,"ease":"power3.out"}, 10.6);
+      tl.fromTo("#l_base .lt", {"opacity":1}, {"opacity":0,"duration":0.35}, 14.4);
+      tl.fromTo("#l_food .lt", {"opacity":0,"x":-20}, {"opacity":1,"x":0,"duration":0.45,"ease":"power3.out"}, 26.6);
+      tl.fromTo("#l_food .lt", {"opacity":1}, {"opacity":0,"duration":0.35}, 34);
+      tl.fromTo("#l_power .lt", {"opacity":0,"x":-20}, {"opacity":1,"x":0,"duration":0.45,"ease":"power3.out"}, 41.4);
+      tl.fromTo("#l_power .lt", {"opacity":1}, {"opacity":0,"duration":0.35}, 45.2);
+      tl.fromTo("#l_storm .lt", {"opacity":0,"x":-20}, {"opacity":1,"x":0,"duration":0.45,"ease":"power3.out"}, 50.9);
+      tl.fromTo("#l_storm .lt", {"opacity":1}, {"opacity":0,"duration":0.35}, 55.5);
+      tl.fromTo("#l_shield .lt", {"opacity":0,"x":-20}, {"opacity":1,"x":0,"duration":0.45,"ease":"power3.out"}, 56.3);
+      tl.fromTo("#l_shield .lt", {"opacity":1}, {"opacity":0,"duration":0.35}, 58.9);
+      tl.fromTo("#l_oxygen .lt", {"opacity":0,"x":-20}, {"opacity":1,"x":0,"duration":0.45,"ease":"power3.out"}, 59.9);
+      tl.fromTo("#l_oxygen .lt", {"opacity":1}, {"opacity":0,"duration":0.35}, 62.8);
+      tl.fromTo("#l_repair .lt", {"opacity":0,"x":-20}, {"opacity":1,"x":0,"duration":0.45,"ease":"power3.out"}, 68.7);
+      tl.fromTo("#l_repair .lt", {"opacity":1}, {"opacity":0,"duration":0.35}, 71.1);
+      tl.fromTo("#l_rovers .lt", {"opacity":0,"x":-20}, {"opacity":1,"x":0,"duration":0.45,"ease":"power3.out"}, 72);
+      tl.fromTo("#l_rovers .lt", {"opacity":1}, {"opacity":0,"duration":0.35}, 75.8);
+      tl.fromTo("#l_travel .lt", {"opacity":0,"x":-20}, {"opacity":1,"x":0,"duration":0.45,"ease":"power3.out"}, 82.6);
+      tl.fromTo("#l_travel .lt", {"opacity":1}, {"opacity":0,"duration":0.35}, 84.6);
+      tl.fromTo("#l_monitor .lt", {"opacity":0,"x":-20}, {"opacity":1,"x":0,"duration":0.45,"ease":"power3.out"}, 85.5);
+      tl.fromTo("#l_monitor .lt", {"opacity":1}, {"opacity":0,"duration":0.35}, 90.1);
+      tl.fromTo("#l_pda .lt", {"opacity":0,"x":-20}, {"opacity":1,"x":0,"duration":0.45,"ease":"power3.out"}, 97.5);
+      tl.fromTo("#l_pda .lt", {"opacity":1}, {"opacity":0,"duration":0.35}, 100.39999999999999);
+      tl.fromTo("#l_science .lt", {"opacity":0,"x":-20}, {"opacity":1,"x":0,"duration":0.45,"ease":"power3.out"}, 106.8);
+      tl.fromTo("#l_science .lt", {"opacity":1}, {"opacity":0,"duration":0.35}, 115.8);
+      tl.fromTo("#l_mystery .lt", {"opacity":0,"x":-20}, {"opacity":1,"x":0,"duration":0.45,"ease":"power3.out"}, 122.2);
+      tl.fromTo("#l_mystery .lt", {"opacity":1}, {"opacity":0,"duration":0.35}, 128.6);
+      tl.fromTo("#l_truth .lt", {"opacity":0,"x":-20}, {"opacity":1,"x":0,"duration":0.45,"ease":"power3.out"}, 133.4);
+      tl.fromTo("#l_truth .lt", {"opacity":1}, {"opacity":0,"duration":0.35}, 137.6);
+      tl.fromTo("#b_ox", {"width":"91%"}, {"width":"58%","duration":2.2,"ease":"power1.inOut"}, 17.5);
+      tl.fromTo("#m_alert", {"opacity":0}, {"opacity":1,"duration":0.3,"repeat":4,"yoyo":true}, 19.6);
+      tl.fromTo("#m_cur", {"x":900,"y":500,"opacity":0}, {"x":140,"y":404,"opacity":1,"duration":1.4,"ease":"power2.inOut"}, 22.2);
+      tl.fromTo("#m_btn", {"scale":1}, {"scale":0.92,"duration":0.12,"yoyo":true,"repeat":1}, 23.7);
+      tl.fromTo("#b_ox", {"width":"58%"}, {"width":"88%","duration":1.6,"ease":"power2.out"}, 24);
+      tl.fromTo("#f1", {"opacity":0.25,"y":10}, {"opacity":1,"y":0,"duration":0.5}, 35);
+      tl.fromTo("#f2", {"opacity":0.25,"y":10}, {"opacity":1,"y":0,"duration":0.5}, 36.2);
+      tl.fromTo("#f3", {"opacity":0.25,"y":10}, {"opacity":1,"y":0,"duration":0.5}, 37.4);
+      tl.fromTo("#f4", {"opacity":0.25,"y":10}, {"opacity":1,"y":0,"duration":0.5}, 38.6);
+      tl.fromTo("#pw_sh", {"backgroundColor":"rgba(255,255,255,0.03)"}, {"backgroundColor":"rgba(120,200,255,0.25)","duration":0.5}, 48);
+      tl.fromTo("#o2", {"boxShadow":"0 0 0px rgba(232,116,44,0)"}, {"boxShadow":"0 0 40px rgba(232,116,44,0.7)","duration":0.8,"yoyo":true,"repeat":3}, 64);
+      tl.fromTo("#f_cur", {"x":1000,"y":520,"opacity":0}, {"x":760,"y":236,"opacity":1,"duration":1.2,"ease":"power2.inOut"}, 77.6);
+      tl.fromTo("#ex2a", {"backgroundColor":"rgba(232,116,44,0.08)"}, {"backgroundColor":"rgba(232,116,44,0.45)","duration":0.25}, 78.9);
+      tl.fromTo("#f_cur", {"x":760,"y":236}, {"x":420,"y":420,"duration":1,"ease":"power2.inOut"}, 79.6);
+      tl.fromTo("#dep_btn", {"scale":1}, {"scale":0.9,"duration":0.12,"yoyo":true,"repeat":1}, 80.7);
+      tl.fromTo("#h_hp", {"width":"92%"}, {"width":"31%","duration":3.2,"ease":"power1.in"}, 91.4);
+      tl.fromTo("#h_pr", {"width":"35%"}, {"width":"61%","duration":3.2}, 91.4);
+      tl.fromTo("#h_alert", {"opacity":0}, {"opacity":1,"duration":0.25,"repeat":4,"yoyo":true}, 93.6);
+      tl.fromTo("#h_cur", {"x":1000,"y":520,"opacity":0}, {"x":500,"y":404,"opacity":1,"duration":1,"ease":"power2.inOut"}, 94.8);
+      tl.fromTo("#rc_btn", {"scale":1}, {"scale":0.9,"duration":0.12,"yoyo":true,"repeat":1}, 95.9);
+      tl.fromTo("#rp1", {"x":0,"opacity":1}, {"x":-60,"opacity":0.25,"duration":0.8}, 102);
+      tl.fromTo("#rp2", {"x":60,"opacity":0.3}, {"x":0,"opacity":1,"duration":0.8}, 102.4);
+      tl.fromTo("#rp_b", {"width":"0%"}, {"width":"100%","duration":2,"ease":"power1.inOut"}, 102.8);
+      tl.fromTo("#rp_ok", {"opacity":0}, {"opacity":1,"duration":0.4}, 104.9);
+      tl.fromTo("#r1", {"opacity":0,"y":30}, {"opacity":1,"y":0,"duration":0.5,"ease":"power3.out"}, 116.9);
+      tl.fromTo("#r2", {"opacity":0,"y":30}, {"opacity":1,"y":0,"duration":0.5,"ease":"power3.out"}, 118.2);
+      tl.fromTo("#r3", {"opacity":0,"y":30}, {"opacity":1,"y":0,"duration":0.5,"ease":"power3.out"}, 119.5);
+      tl.fromTo("#rc1", {"opacity":0,"x":-30}, {"opacity":1,"x":0,"duration":0.4}, 129.5);
+      tl.fromTo("#rc2", {"opacity":0,"x":-30}, {"opacity":1,"x":0,"duration":0.4}, 130);
+      tl.fromTo("#rc3", {"opacity":0,"x":-30}, {"opacity":1,"x":0,"duration":0.4}, 130.5);
+      tl.fromTo("#rc4", {"opacity":0,"x":-30}, {"opacity":1,"x":0,"duration":0.4}, 131);
+      tl.fromTo("#rc_link", {"opacity":0}, {"opacity":1,"duration":0.5}, 131.8);
+      tl.fromTo("#title1 .t", {"opacity":0,"y":16}, {"opacity":1,"y":0,"duration":1,"ease":"power3.out"}, 0.3);
+      tl.fromTo("#title1 .t", {"opacity":1}, {"opacity":0,"duration":0.6}, 4);
+      tl.fromTo("#endcard .e1", {"opacity":0,"scale":1.04}, {"opacity":1,"scale":1,"duration":1.2,"ease":"power3.out"}, 145.4);
+      tl.fromTo("#endcard .e2", {"opacity":0}, {"opacity":1,"duration":1}, 146.6);
+      tl.fromTo("#endcard .e3", {"opacity":0}, {"opacity":1,"duration":1}, 147.4);
+      tl.fromTo("#fade", {"opacity":1}, {"opacity":0,"duration":0.8}, 0);
+      tl.fromTo("#flash", {"opacity":0}, {"opacity":0.6,"duration":0.08,"yoyo":true,"repeat":1}, 145.2);
+      window.__timelines['main'] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

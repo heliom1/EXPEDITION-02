@@ -76,6 +76,61 @@ export class WorldData {
     this.splats[tz * this.meta.tilesPerSide + tx] = out;
   }
 
+  /** Mean terrain height over an axis-aligned world rectangle, sampled every `step` metres. */
+  meanHeight(x0: number, x1: number, z0: number, z1: number, step = 2): number {
+    let s = 0, c = 0;
+    for (let x = x0; x <= x1; x += step) for (let z = z0; z <= z1; z += step) { s += this.heightAt(x, z); c++; }
+    return c ? s / c : 0;
+  }
+
+  /**
+   * Levels the terrain to height `h` inside a world rectangle, blending back to the original surface over
+   * `blend` metres with a smoothstep. Must run before terrain, rocks and colliders are built. Used for the
+   * outpost pad so the base model sits on level ground (CinderRain is not modified on disk).
+   */
+  flattenRect(x0: number, x1: number, z0: number, z1: number, h: number, blend: number): void {
+    const { extent, cell, heightBase, heightSize } = this.meta;
+    const n = this.n;
+    const q = Math.round(((h - heightBase) / heightSize) * 65535);
+    const i0 = Math.max(0, Math.floor((x0 - blend + extent) / cell)), i1 = Math.min(n - 1, Math.ceil((x1 + blend + extent) / cell));
+    const j0 = Math.max(0, Math.floor((z0 - blend + extent) / cell)), j1 = Math.min(n - 1, Math.ceil((z1 + blend + extent) / cell));
+    for (let j = j0; j <= j1; j++) {
+      const z = j * cell - extent;
+      const dz = Math.max(z0 - z, 0, z - z1);
+      for (let i = i0; i <= i1; i++) {
+        const x = i * cell - extent;
+        const dx = Math.max(x0 - x, 0, x - x1);
+        const d = Math.hypot(dx, dz);
+        if (d >= blend) continue;
+        const t = d / blend, w = 1 - t * t * (3 - 2 * t); // 1 inside, smooth falloff to 0
+        const k = j * n + i;
+        this.heights[k] = Math.round(this.heights[k] * (1 - w) + q * w);
+      }
+    }
+  }
+
+  /**
+   * Adds a smooth elongated rise (an old dune ridge) centred on (cx, cz): half-length `len` along `angle`
+   * (radians from +X), half-width `width`, peak `height` metres, with low-frequency waviness on the crest.
+   * Like flattenRect it must run before terrain, rocks and colliders are built.
+   */
+  raiseRidge(cx: number, cz: number, len: number, width: number, height: number, angle: number): void {
+    const { extent, cell, heightSize } = this.meta;
+    const n = this.n, r = Math.max(len, width) + 4;
+    const ca = Math.cos(angle), sa = Math.sin(angle);
+    const i0 = Math.max(0, Math.floor((cx - r + extent) / cell)), i1 = Math.min(n - 1, Math.ceil((cx + r + extent) / cell));
+    const j0 = Math.max(0, Math.floor((cz - r + extent) / cell)), j1 = Math.min(n - 1, Math.ceil((cz + r + extent) / cell));
+    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+      const x = i * cell - extent - cx, z = j * cell - extent - cz;
+      const u = (x * ca + z * sa) / len, v = (-x * sa + z * ca) / width;
+      const d2 = u * u + v * v;
+      if (d2 >= 1) continue;
+      const w = Math.pow(1 - d2, 2) * (0.85 + 0.15 * Math.sin(u * 7.3 + 1.1));
+      const k = j * n + i;
+      this.heights[k] = Math.min(65535, Math.round(this.heights[k] + (height * w / heightSize) * 65535));
+    }
+  }
+
   /** Height at global grid index (clamped to the world). */
   sample(i: number, j: number): number {
     const n = this.n;

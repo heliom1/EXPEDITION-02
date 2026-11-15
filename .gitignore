@@ -110,3 +110,10 @@ InitTestScene*.unity*
 /Builds/
 *.tmp
 
+
+# Local AI/tool configs (.mcp.json contains API keys - never commit)
+.mcp.json
+.claude/
+.codex/
+.agents/
+skills-lock.json

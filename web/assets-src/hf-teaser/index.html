@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+    <style>
+      :root { --ink: #f6eee6; --muted: #c9b8a8; --accent: #e8742c; --font-display: 'Outfit'; --font-mono: 'IBM Plex Mono'; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #000; }
+      #root { position: relative; width: 1920px; height: 1080px; font-family: var(--font-display); color: var(--ink); }
+      video { position: absolute; inset: 0; width: 1920px; height: 1080px; object-fit: cover; z-index: 1; }
+      .lower { position: absolute; inset: 0; z-index: 5; }
+      .lt { position: absolute; left: 120px; bottom: 130px; padding: 16px 26px 18px; background: rgba(10, 6, 4, 0.72); border-left: 4px solid var(--accent); }
+      .lt b { display: block; font-size: 40px; letter-spacing: 0.22em; font-weight: 600; }
+      .lt span { display: block; margin-top: 8px; font: 500 26px var(--font-mono); letter-spacing: 0.12em; color: #ffd2a8; }
+      #title { position: absolute; inset: 0; z-index: 6; display: grid; place-content: center; text-align: center; }
+      #title b { display: block; font-size: 130px; font-weight: 300; letter-spacing: 0.26em; text-shadow: 0 4px 40px rgba(0, 0, 0, 0.6); }
+      #title em, #end em { font-style: normal; font-weight: 600; color: var(--accent); }
+      #title span { display: block; margin-top: 20px; font-size: 32px; letter-spacing: 0.7em; color: var(--muted); }
+      #end { position: absolute; inset: 0; z-index: 7; background: radial-gradient(ellipse at 50% 50%, #2b1208 0%, #000 70%); display: grid; place-content: center; text-align: center; }
+      #end .e1 { font-size: 150px; font-weight: 300; letter-spacing: 0.24em; }
+      #end .e2 { margin-top: 26px; font-size: 40px; letter-spacing: 0.3em; }
+      #end .e3 { margin-top: 22px; font-size: 28px; letter-spacing: 0.7em; color: var(--muted); }
+      #fade { position: absolute; inset: 0; z-index: 9; background: #000; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="28" data-width="1920" data-height="1080">
+      <video id="v0" class="clip" data-start="0" data-duration="2.2" data-track-index="1" src="assets/clips/menu_orbit.mp4" muted playsinline></video>
+      <video id="v1" class="clip" data-start="2.2" data-duration="2" data-track-index="1" src="assets/clips/space_entry.mp4" muted playsinline></video>
+      <video id="v2" class="clip" data-start="4.2" data-duration="1.8" data-track-index="1" src="assets/clips/land_touchdown.mp4" muted playsinline></video>
+      <video id="v3" class="clip" data-start="6" data-duration="2" data-track-index="1" src="assets/clips/outpost_aerial.mp4" muted playsinline></video>
+      <video id="v4" class="clip" data-start="8" data-duration="2" data-track-index="1" src="assets/clips/monitoring.mp4" muted playsinline></video>
+      <video id="v5" class="clip" data-start="10" data-duration="1.6" data-track-index="1" src="assets/clips/farm_use.mp4" muted playsinline></video>
+      <video id="v6" class="clip" data-start="11.6" data-duration="1.6" data-track-index="1" src="assets/clips/reactor.mp4" muted playsinline></video>
+      <video id="v7" class="clip" data-start="13.2" data-duration="1.6" data-track-index="1" src="assets/clips/storm.mp4" muted playsinline></video>
+      <video id="v8" class="clip" data-start="14.8" data-duration="1.6" data-track-index="1" src="assets/clips/shields.mp4" muted playsinline></video>
+      <video id="v9" class="clip" data-start="16.4" data-duration="1.6" data-track-index="1" src="assets/clips/mev_drive.mp4" muted playsinline></video>
+      <video id="v10" class="clip" data-start="18" data-duration="1.6" data-track-index="1" src="assets/clips/r1_remote.mp4" muted playsinline></video>
+      <video id="v11" class="clip" data-start="19.6" data-duration="1.6" data-track-index="1" src="assets/clips/samples.mp4" muted playsinline></video>
+      <video id="v12" class="clip" data-start="21.2" data-duration="1.6" data-track-index="1" src="assets/clips/holo.mp4" muted playsinline></video>
+      <video id="v13" class="clip" data-start="22.8" data-duration="2.2" data-track-index="1" src="assets/clips/ice_crystals.mp4" muted playsinline></video>
+      <div id="l0" class="clip lower" data-start="8.1" data-duration="3.4" data-track-index="5"><div class="lt"><b>MANAGE THE BASE</b><span>ELECTRICITY · FOOD · OXYGEN · WATER</span></div></div>
+      <div id="l1" class="clip lower" data-start="11.7" data-duration="4.6" data-track-index="5"><div class="lt"><b>SURVIVE MARS</b><span>REACTOR · DUST STORMS · SHIELDING</span></div></div>
+      <div id="l2" class="clip lower" data-start="16.5" data-duration="3" data-track-index="5"><div class="lt"><b>DEPLOY ROVERS</b><span>DRIVE · REMOTE-CONTROL · SCAN</span></div></div>
+      <div id="l3" class="clip lower" data-start="19.7" data-duration="5.2" data-track-index="5"><div class="lt"><b>DISCOVER</b><span>WHAT LIES BENEATH</span></div></div>
+      <div id="title" class="clip" data-start="0" data-duration="4" data-track-index="6"><div class="t"><b>EXPEDITION <em>02</em></b><span>SURVIVE. MANAGE. EXPLORE.</span></div></div>
+      <div id="end" class="clip" data-start="25" data-duration="3" data-track-index="7"><div class="e1">EXPEDITION <em>02</em></div><div class="e2">YOUR MISSION IS JUST BEGINNING.</div><div class="e3">EXPLORE. DISCOVER. SURVIVE.</div></div>
+      <div id="fade" class="clip" data-start="0" data-duration="0.7" data-track-index="8"></div>
+      <audio id="vo1" class="clip" data-start="0.3" data-duration="9.6" data-track-index="10" src="assets/vo/s1.mp3" data-volume="1"></audio>
+      <audio id="vo8" class="clip" data-start="19.0" data-duration="6.2" data-track-index="10" src="assets/vo/s8.mp3" data-volume="1"></audio>
+      <audio id="mus" class="clip" data-start="0" data-duration="22" data-track-index="11" src="assets/music/bed_surface.mp3" data-volume="0.3" data-fade-in="1.5" data-fade-out="2"></audio>
+      <audio id="sting" class="clip" data-start="24.8" data-duration="3.2" data-track-index="12" src="assets/music/sting_discovery.mp3" data-volume="0.6"></audio>
+    </div>
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo("#l0 .lt", {"opacity":0,"x":-20}, {"opacity":1,"x":0,"duration":0.4,"ease":"power3.out"}, 8.1);
+      tl.fromTo("#l0 .lt", {"opacity":1}, {"opacity":0,"duration":0.3}, 11.15);
+      tl.fromTo("#l1 .lt", {"opacity":0,"x":-20}, {"opacity":1,"x":0,"duration":0.4,"ease":"power3.out"}, 11.7);
+      tl.fromTo("#l1 .lt", {"opacity":1}, {"opacity":0,"duration":0.3}, 15.949999999999998);
+      tl.fromTo("#l2 .lt", {"opacity":0,"x":-20}, {"opacity":1,"x":0,"duration":0.4,"ease":"power3.out"}, 16.5);
+      tl.fromTo("#l2 .lt", {"opacity":1}, {"opacity":0,"duration":0.3}, 19.15);
+      tl.fromTo("#l3 .lt", {"opacity":0,"x":-20}, {"opacity":1,"x":0,"duration":0.4,"ease":"power3.out"}, 19.7);
+      tl.fromTo("#l3 .lt", {"opacity":1}, {"opacity":0,"duration":0.3}, 24.549999999999997);
+      tl.fromTo("#title .t", {"opacity":0,"y":14}, {"opacity":1,"y":0,"duration":0.9,"ease":"power3.out"}, 0.2);
+      tl.fromTo("#title .t", {"opacity":1}, {"opacity":0,"duration":0.5}, 3.4);
+      tl.fromTo("#end .e1", {"opacity":0,"scale":1.04}, {"opacity":1,"scale":1,"duration":1,"ease":"power3.out"}, 25.1);
+      tl.fromTo("#end .e2", {"opacity":0}, {"opacity":1,"duration":0.8}, 25.9);
+      tl.fromTo("#end .e3", {"opacity":0}, {"opacity":1,"duration":0.8}, 26.5);
+      tl.fromTo("#fade", {"opacity":1}, {"opacity":0,"duration":0.6}, 0);
+      window.__timelines['main'] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

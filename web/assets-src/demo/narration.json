@@ -1,0 +1,116 @@
+{
+  "_comment": "EXPEDITION 02 gameplay demonstration (2:30) — narration from the user's storyboard, verbatim. Generated with ElevenLabs (voice Roger, premade) by tools/generate-demo-voice.mjs into assets-src/hf-demo/assets/vo/<id>.mp3",
+  "voice": {
+    "id": "CwhRBWXzGAHq8TQ4Fs17",
+    "name": "Roger (ElevenLabs premade)",
+    "settings": {
+      "stability": 0.5,
+      "similarity_boost": 0.8,
+      "style": 0.25
+    }
+  },
+  "lines": [
+    {
+      "id": "s1",
+      "start": 0.5,
+      "text": "Welcome to Mars. Your mission is to maintain humanity's base, keep its systems operational, and continue the unfinished work of the first expedition."
+    },
+    {
+      "id": "s2",
+      "start": 10.4,
+      "text": "Every day begins at the central monitoring system. Here, you check the base's essential resources: electricity, food, oxygen, and water. Monitor their condition, respond to warnings, and prevent critical systems from failing."
+    },
+    {
+      "id": "s3a",
+      "start": 26.6,
+      "text": "Food production requires more than growing crops. You manage indoor farms, cultivate fungi, and collect organic leftovers. These materials are processed to recover nutrients that support future crop production."
+    },
+    {
+      "id": "s3b",
+      "start": 41.3,
+      "text": "Your nuclear fission reactor generates power automatically, but you must manage its distribution. Dust storms reduce solar output, while severe solar events require activation of the experimental magnetic shielding system. Keep essential life-support systems powered."
+    },
+    {
+      "id": "s3c",
+      "start": 59.8,
+      "text": "Your oxygen system converts Martian carbon dioxide into breathable oxygen. Monitor production, quality, storage, and power consumption. When equipment fails, you must repair it."
+    },
+    {
+      "id": "s4",
+      "start": 72,
+      "text": "Once the base is stable, it's time to explore. You have three exploration rovers, each assigned two expeditions. Choose your destinations, review the mission, and deploy your rovers to investigate the Martian surface."
+    },
+    {
+      "id": "s5",
+      "start": 85.6,
+      "text": "Rovers explore automatically, but their condition gradually deteriorates from difficult terrain and possible malfunctions. Monitor their health and decide whether to continue or recall them. If a rover becomes disabled, retrieve it before repairs can begin. Different failures require different repairs and replacement parts."
+    },
+    {
+      "id": "s6",
+      "start": 106.8,
+      "text": "Every completed expedition rewards you with scientific discoveries, geological samples, and environmental data. Your findings unlock new destinations and provide clues that bring you closer to understanding what happened during the first expedition."
+    },
+    {
+      "id": "s7",
+      "start": 122.2,
+      "text": "But the discoveries reveal something more. The first astronaut left unfinished work, missing records, and unexplained observations. As you complete the expeditions, you begin connecting the evidence and uncovering what lies beneath the Martian surface."
+    },
+    {
+      "id": "s8",
+      "start": 138.6,
+      "text": "Maintain the base. Complete all six expeditions. Uncover the truth behind the first mission."
+    }
+  ],
+  "scenes": [
+    [
+      "s01",
+      0,
+      10.2
+    ],
+    [
+      "s02",
+      10.2,
+      26.2
+    ],
+    [
+      "s03a",
+      26.2,
+      41
+    ],
+    [
+      "s03b",
+      41,
+      59.5
+    ],
+    [
+      "s03c",
+      59.5,
+      71.6
+    ],
+    [
+      "s04",
+      71.6,
+      85.2
+    ],
+    [
+      "s05",
+      85.2,
+      106.4
+    ],
+    [
+      "s06",
+      106.4,
+      121.8
+    ],
+    [
+      "s07",
+      121.8,
+      138.2
+    ],
+    [
+      "s08",
+      138.2,
+      150
+    ]
+  ]
+}

@@ -1,4 +1,5 @@
 import type { WorldData } from '../world/worldData';
+import type { StructureGrid } from '../world/structureGrid';
 import { caveFloorBelow, caveGrad, caveSdf, nearCave } from './caveDef';
 
 export interface GroundHit { h: number; n: [number, number, number]; cave: boolean }
@@ -9,15 +10,28 @@ export interface GroundHit { h: number; n: [number, number, number]; cave: boole
  * The cut test matches the terrain shader (cfCaveMouth < -0.35).
  */
 export class Ground {
+  /** Model-derived structures (e.g. the outpost): their floors are walkable, their solid cells block. */
+  readonly structures: StructureGrid[] = [];
+
   constructor(readonly world: WorldData) {}
+
+  /** Highest walkable surface at or below yRef + reach, including structure floors. */
+  at(x: number, z: number, yRef: number, reach = 0.6): GroundHit {
+    const hit = this.atNatural(x, z, yRef, reach);
+    for (const s of this.structures) {
+      const f = s.floorAt(x, z);
+      if (f !== null && f <= yRef + reach && f > hit.h) return { h: f, n: [0, 1, 0], cave: false };
+    }
+    return hit;
+  }
 
   terrainCut(x: number, z: number): boolean {
     if (!nearCave(x, z)) return false;
     return caveSdf(x, this.world.heightAt(x, z), z, false) < -0.35;
   }
 
-  /** Highest walkable surface at or below yRef + reach. */
-  at(x: number, z: number, yRef: number, reach = 0.6): GroundHit {
+  /** Terrain/cave surface only. */
+  atNatural(x: number, z: number, yRef: number, reach = 0.6): GroundHit {
     const w = this.world;
     const hT = w.heightAt(x, z);
     if (!nearCave(x, z)) return { h: hT, n: w.normalAt(x, z, 0.6), cave: false };

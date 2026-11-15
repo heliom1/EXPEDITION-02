@@ -1,4 +1,4 @@
-// End-to-end mission run in a real (headless) browser.
+﻿// End-to-end mission run in a real (headless) browser.
 // Drives the actual input → interaction → mission path with synthetic key presses, walks into the
 // cave with the real controller, and verifies save → reload → Continue.
 // Usage: node tools/e2e.mjs [baseUrl]     (dev server or `npm run preview` must be running)
@@ -17,6 +17,16 @@ const api = (expr) => b.evaluate(`window.__cf.api.${expr}`);
 const state = () => api('state()');
 const shot = async (n) => writeFileSync(join(out, `e2e_${n}.png`), await b.screenshot());
 const press = async (code, key = '') => { await b.key(code, key); await sleep(350); };
+/** Polls game state until pred holds (frame-rate independent); returns the last state. */
+const until = async (pred, ms = 5000) => { let st; for (let t = 0; t < ms; t += 100) { st = await state(); if (pred(st)) return st; await sleep(100); } return st; };
+/** Waits for a cutscene to start, then skips it the way a player would (Space arms the skip, Space again skips). */
+const skipCutscene = async () => {
+  const st = await until((x) => x.mode === 'cutscene', 6000);
+  if (st.mode !== 'cutscene') return false;
+  await press('Space');
+  await press('Space');
+  return (await until((x) => x.mode !== 'cutscene', 8000)).mode !== 'cutscene';
+};
 const brief = (s) => JSON.stringify({ mode: s.mode, objective: s.objective, focused: s.focused, records: s.records.length, inCave: s.inCave });
 
 try {
@@ -29,29 +39,70 @@ try {
   // 1. Mission terminal.
   const [tx, ty, tz] = A.terminal;
   await api(`standAt(${tx + 1.3}, ${tz - 1.5}, ${tx}, ${ty}, ${tz})`);
-  await sleep(400);
-  s = await state();
+  s = await until((st) => st.focused === 'terminal');
   check('terminal is focused when looked at', s.focused === 'terminal', `focused=${s.focused}`);
   await press('KeyE', 'e');
-  s = await state();
+  s = await until((st) => st.readerOpen);
   check('E opens the assignment record; objective → rover', s.readerOpen && s.objective === 'rover', brief(s));
   await press('KeyE', 'e');
-  s = await state();
+  s = await until((st) => !st.readerOpen);
   check('E closes the record', !s.readerOpen && s.mode === 'playing', `mode=${s.mode}`);
 
   // 2. Airlock.
   const [ax, ay, az] = A.airlock;
   await api(`standAt(${ax + 2.0}, ${az + 1.6}, ${ax}, ${ay}, ${az})`);
-  await sleep(400);
-  s = await state();
+  s = await until((st) => st.focused === 'airlock');
   check('airlock recharge is focusable', s.focused === 'airlock', `focused=${s.focused}`);
+
+  // 2b. The user's outpost model: walk in through the south airlock, walls block, tunnel leads to the Farm (west).
+  if (A.outpost) {
+    const [ox, oy, oz] = A.outpost;
+    const distC = (p) => Math.hypot(p[0] - ox, p[2] - oz);
+    await api(`standAt(${ox + 1.6}, ${oz - 19}, ${ox + 1.6}, ${oy + 1.6}, ${oz})`);
+    await sleep(300);
+    await api('walk(6.5)');
+    await sleep(400);
+    s = await state();
+    // After walking through, the door is open or already closing behind the player (never still closed).
+    check('outpost: the south airlock door opened as the player approached', /^(open|closing)/.test(s.doors?.['South airlock'] ?? ''), JSON.stringify(s.doors));
+    check('outpost: walking north through the south airlock enters the main dome', distC(s.pos) < 8 && s.grounded && Math.abs(s.pos[1] - oy) < 0.6, `pos=${s.pos.map((v) => v.toFixed(1))} distFromDomeCentre=${distC(s.pos).toFixed(1)} floor=${oy.toFixed(2)}`);
+    await shot('2b_dome');
+    await api(`standAt(${ox - 15}, ${oz - 15}, ${ox}, ${oy + 1.6}, ${oz})`);
+    await sleep(300);
+    await api('walk(5)');
+    await sleep(400);
+    s = await state();
+    check('outpost: the dome wall blocks the player away from doorways', distC(s.pos) > 9.5, `pos=${s.pos.map((v) => v.toFixed(1))} distFromDomeCentre=${distC(s.pos).toFixed(1)}`);
+    await api(`standAt(${ox - 2}, ${oz}, ${ox - 40}, ${oy + 1.6}, ${oz})`);
+    await sleep(300);
+    await api('walk(8)');
+    await sleep(400);
+    s = await state();
+    check('outpost: the −X tunnel leads from the dome into the Storage module', s.pos[0] < ox - 17 && s.grounded, `pos=${s.pos.map((v) => v.toFixed(1))} dx=${(s.pos[0] - ox).toFixed(1)}`);
+    await shot('2c_storage');
+    check('outpost: the airlock door closed again after the player left', /^clos/.test(s.doors?.['South airlock'] ?? ''), JSON.stringify(s.doors));
+    await api(`standAt(${ox + 2}, ${oz}, ${ox + 40}, ${oy + 1.6}, ${oz})`);
+    await sleep(300);
+    await api('walk(8)');
+    await sleep(400);
+    s = await state();
+    check('outpost: the +X tunnel leads from the dome into the Farm greenhouse', s.pos[0] > ox + 17 && s.grounded, `pos=${s.pos.map((v) => v.toFixed(1))} dx=${(s.pos[0] - ox).toFixed(1)}`);
+    await shot('2d_farm');
+    await api(`standAt(${ox}, ${oz + 2}, ${ox}, ${oy + 1.6}, ${oz + 40})`);
+    await sleep(300);
+    await api('walk(8)');
+    await sleep(400);
+    s = await state();
+    check('outpost: the north tunnel leads from the dome into Communications & Shields', s.pos[2] > oz + 17 && s.grounded, `pos=${s.pos.map((v) => v.toFixed(1))} dz=${(s.pos[2] - oz).toFixed(1)}`);
+    await shot('2e_comms');
+  }
 
   // 3. Rover.
   const [rx, ry, rz] = A.rover;
   await api(`standAt(${rx + 1.6}, ${rz + 0.6}, ${rx}, ${ry}, ${rz})`);
-  await sleep(500);
+  await until((st) => st.focused === 'rover');
   await press('KeyE', 'e');
-  s = await state();
+  s = await until((st) => st.readerOpen);
   check('rover log read; objective → drill', s.objective === 'drill' && s.records.includes('rover_log'), brief(s));
   await press('KeyE', 'e');
 
@@ -80,8 +131,7 @@ try {
   // 5. Cliff base → cave.
   const N = A.nodes;
   await api(`standAt(${N.mouthOut.x + 3}, ${N.mouthOut.z + 18}, ${N.mouthIn.x}, 10, ${N.mouthIn.z})`);
-  await sleep(800);
-  s = await state();
+  s = await until((st) => st.objective === 'cave');
   check('reaching the cliff base logs the survey; objective → cave', s.objective === 'cave' && s.records.includes('cliff_survey'), brief(s));
   await press('KeyE', 'e');
   await shot('5_mouth');
@@ -122,18 +172,18 @@ try {
   check('spectrometer scan runs', s.scan === 'scanning', `scan=${s.scan}`);
   await shot('7_scan');
   await api('fastForwardScan()');
-  await sleep(1200);
-  s = await state();
+  check('the ice discovery plays its cutscene, skippable with Space ×2', await skipCutscene(), '');
+  s = await until((st) => st.objective === 'report' && st.readerOpen);
   check('scan completes; ice record; objective → report', s.scan === 'done' && s.records.includes('ice_discovery') && s.objective === 'report', brief(s));
   await shot('8_ice_record');
   await press('KeyE', 'e');
 
   // 8. Report at the outpost.
   await api(`standAt(${tx + 1.3}, ${tz - 1.5}, ${tx}, ${ty}, ${tz})`);
-  await sleep(500);
+  await until((st) => st.focused === 'terminal');
   await press('KeyE', 'e');
-  await sleep(900);
-  s = await state();
+  check('the transmission plays its cutscene, skippable with Space ×2', await skipCutscene(), '');
+  s = await until((st) => st.mode === 'end');
   check('transmission completes the build; end card shown', s.objective === null && s.mode === 'end' && s.overlay === 'Water on Mars', brief(s) + ` overlay=${s.overlay}`);
   await shot('9_end');
 
