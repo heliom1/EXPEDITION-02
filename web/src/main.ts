@@ -50,7 +50,7 @@ import { OreField, type Pickup } from './inventory/ore';
 import { discoveryRecord, discoveryRecordId, type Discovery } from './inventory/discoveries';
 import { StorageScreen } from './ui/inventoryUi';
 import { ToolViewmodel } from './player/toolViewmodel';
-import { FirstPersonLegs } from './player/firstPersonLegs';
+import { Footprints } from './world/footprints';
 import { LockerProp } from './base/locker';
 import { Facilities, FACILITY, type FacilityEvent } from './base/facilities';
 import { CommsConsoleProp, GrowBedProp, ShieldGeneratorProp } from './base/facilityProps';
@@ -370,7 +370,7 @@ async function boot(): Promise<void> {
 
   // ---------- astronaut body + third-person camera (System A) ----------
   let body: PlayerBody | null = null;
-  void PlayerBody.load(`${slotBase}opt/astronaut.glb`).then((b) => { body = b; scene.add(b.root); }).catch((e) => console.warn('Astronaut body unavailable:', e));
+  void PlayerBody.load(`${slotBase}opt/astronaut.glb`).then((b) => { body = b; scene.add(b.root); tool.setArms(b.model); }).catch((e) => console.warn('Astronaut body unavailable:', e));
   const camBlocker = {
     blocked: (x: number, y: number, z: number) =>
       ground.structures.some((s) => y > s.baseY + 0.2 && y < s.baseY + 2.6 && s.isSolid(x, z))
@@ -378,7 +378,7 @@ async function boot(): Promise<void> {
     groundAt: (x: number, z: number, yRef: number) => ground.at(x, z, yRef).h,
   };
   const player = new PlayerController(world, colliders, rocks, ground);
-  const firstPersonLegs = new FirstPersonLegs(scene);
+  const footprints = new Footprints(scene, ctx.fog);
   const audio = new AudioEngine();
   // Browsers only allow audio to start inside a user gesture. Menu actions like Continue and New Game (over a save)
   // start the game after awaiting IndexedDB — outside the gesture — which left the AudioContext suspended (silent).
@@ -469,6 +469,7 @@ async function boot(): Promise<void> {
   const discoveries: Discovery[] = [];
   const mining = { deposit: null as string | null, progress: 0, duration: 2.4, grind: 0 };
   const tool = new ToolViewmodel();
+  tool.setEnvironment(vehicleEnv);
   void tool.load(`${slotBase}opt/handdrill.glb`).catch((e) => console.warn('Hand drill model unavailable:', e));
   const storageUi = new StorageScreen(ui, () => closeStorage());
   pda.inventory = inventory;
@@ -1622,10 +1623,14 @@ async function boot(): Promise<void> {
     voice.updateBed(adapt, audio.started);
     locker.update(dt);
     tool.visible = !shotCam && mode === 'playing' && !body?.thirdPerson && hotbar.selectedItem === 'hand_drill' && inventory.count('hand_drill') > 0;
-    body?.update(dt, player.pos, player.vel, player.yaw, player.grounded, ['playing', 'paused', 'reading', 'pda', 'storage', 'failed'].includes(mode));
+    body?.update(dt, player.pos, player.vel, player.yaw, player.grounded, ['playing', 'paused', 'reading', 'pda', 'storage', 'failed'].includes(mode), player.pitch, !shotCam && ['playing', 'reading'].includes(mode));
     tool.drilling = mining.deposit !== null;
     tool.update(dt, t, player.moving && player.grounded);
-    firstPersonLegs.update(dt, t, player.pos, player.yaw, player.pitch, player.grounded, player.moving, ['playing', 'reading'].includes(mode) && !body?.thirdPerson);
+    // Boot prints and kicked-up dust on natural ground (not on the outpost's floors).
+    if (mode === 'playing' || mode === 'reading') footprints.update(dt, player.pos, player.vel.x, player.vel.z, player.vel.y, player.yaw, player.grounded, player.sprinting, player.stride, (x, z) => {
+      if (outpostModel && outpostModel.grid.floorAt(x, z) !== null) return null;
+      return ground.atNatural(x, z, player.pos.y + 0.4);
+    });
     status.outpostMeshes = outpostMeshesDrawn;
     ctx.followShadow(camera.position);
     sky.position.copy(camera.position);
@@ -1793,6 +1798,9 @@ async function boot(): Promise<void> {
       setSuit: (o2: number, pwr: number, hp: number) => { suit.oxygen = o2; suit.power = pwr; suit.health = hp; },
       /** Diagnostics: free camera (null to release) and third-person body control for animation checks. */
       freeCam: (p: number[] | null, l?: number[]) => { shotCam = p && l ? { pos: new Vector3(p[0], p[1], p[2]), look: new Vector3(l[0], l[1], l[2]) } : null; },
+      yawNow: () => player.yaw,
+      toolView: (p: number[] | null, l: number[] = [0.09, -0.25, -0.6]) => { tool.debugView = p ? { pos: new Vector3(p[0], p[1], p[2]), look: new Vector3(l[0], l[1], l[2]) } : null; },
+      look: (yaw: number | null, pitch: number) => { if (yaw !== null) player.yaw = yaw; player.pitch = pitch; },
       thirdPerson: (on: boolean) => { if (body) { body.thirdPerson = on; body.resetCamera(); } return !!body; },
       idleAction: (name: string) => body?.motion?.force(name) ?? false,
       fastForwardScan: () => { if (scan.state === 'scanning') scan.progress = Math.max(scan.progress, 0.97); },
@@ -1849,6 +1857,7 @@ async function boot(): Promise<void> {
         suit: { oxygen: suit.oxygen, power: suit.power, health: suit.health }, optionalDone: mission.flags.has('done.opt.samples'),
         rover: drivable ? { pos: drivable.pos.toArray(), yaw: drivable.yaw, speed: drivable.speed, battery: drivable.battery, condition: drivable.condition, pitch: drivable.pitch, roll: drivable.roll, occupied: drivable.occupied, cam: roverCam, wheelsSpin: drivable.group.children.filter((c) => c.name.startsWith('RoverWheel_')).map((w) => w.rotation.x) } : null,
         camPos: camera.position.toArray(), camFov: camera.fov, cutT: cutscenes.playing ? cutscenes.t : null, cutLen: cutscenes.duration, cutId: cutscenes.id, visorOn: visorRig?.active ?? false, audio: audio.state, audioDb: audio.levelDb(), bed: audio.currentBed, voice: voice.current?.id ?? null, subtitle: voice.subtitleVisible ? voice.subtitleText : null, voicePlayed: [...voice.played],
+        footprints: footprints.count,
         body: body ? { loaded: true, thirdPerson: body.thirdPerson, visible: body.root.visible, rotY: body.root.rotation.y } : { loaded: false },
         hotbarText: [...document.querySelectorAll('.hotbar .slot')].map((e) => e.textContent),
       }),

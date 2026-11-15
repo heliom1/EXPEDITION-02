@@ -40,7 +40,7 @@ const ease = (u: number) => u * u * (3 - 2 * u);
 const _q = new Quaternion(), _q2 = new Quaternion(), _pw = new Quaternion(), _a = new Vector3(), _b = new Vector3(), _c = new Vector3();
 
 /** Rotates `bone` (in world space) so the bone→child segment points along `dir`, blended by `w`. */
-function aim(bone: Bone, child: Object3D, dir: Vector3, w: number): void {
+export function aim(bone: Bone, child: Object3D, dir: Vector3, w: number): void {
   if (w <= 0) return;
   bone.updateWorldMatrix(true, false);
   child.updateWorldMatrix(false, false);
@@ -52,7 +52,7 @@ function aim(bone: Bone, child: Object3D, dir: Vector3, w: number): void {
 }
 
 /** Rotates `bone` about a world axis by `angle` (radians), blended by `w`. */
-function turn(bone: Bone, axis: Vector3, angle: number, w = 1): void {
+export function turn(bone: Bone, axis: Vector3, angle: number, w = 1): void {
   if (angle === 0 || w <= 0) return;
   bone.updateWorldMatrix(true, false);
   applyWorldDelta(bone, _q.setFromAxisAngle(_c.copy(axis).normalize(), angle), w);
