@@ -1,0 +1,8 @@
+# Netlify: build the web game from /web and publish web/dist
+[build]
+  base = "web"
+  command = "npm run sync-assets && npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
