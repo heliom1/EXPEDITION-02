@@ -57,7 +57,9 @@ import { Facilities, FACILITY, type FacilityEvent } from './base/facilities';
 import { CommsConsoleProp, GrowBedProp, ShieldGeneratorProp } from './base/facilityProps';
 import { Hud } from './ui/hud';
 import { SurveyMap, type MapMarker } from './ui/minimap';
-import { LoadingScreen, MainMenu, Pda, RecordReader, card, introCard } from './ui/screens';
+import { MainMenu, Pda, RecordReader, card, introCard } from './ui/screens';
+import { LoadingScreen } from './ui/intro';
+import { menuMusic } from './audio/menuMusic';
 import { h } from './ui/dom';
 import { SpaceScene } from './space/spaceScene';
 import { Spacecraft } from './space/spacecraft';
@@ -83,7 +85,8 @@ async function boot(): Promise<void> {
   const params = new URLSearchParams(location.search);
   const shot = params.get('shot');
   const automated = !!shot;
-  const loading = new LoadingScreen(ui);
+  // Automated runs (screenshots / tests) skip the click-to-start gate.
+  const loading = new LoadingScreen(ui, { autoStart: automated || params.has('e2e') });
   const status: Record<string, unknown> = { ready: false, errors: [] as string[] };
   window.__cf = status;
 
@@ -437,6 +440,7 @@ async function boot(): Promise<void> {
     if (terrain.quality !== q) { terrain.quality = q; ctx.setQuality(s.quality); }
     rocks.minSegs = q.lods[0][1];
     audio.setVolume(s.volume);
+    menuMusic.setVolume(s.volume);
     saveSettings(s);
   };
   applySettings(settings);
@@ -853,6 +857,8 @@ async function boot(): Promise<void> {
     hud.show(m === 'playing' || m === 'reading' || m === 'driving');
     if (m !== 'driving') hud.setVehicle(null);
     menu.show(m === 'menu');
+    // Menu theme: from the intro through the menu and the mission briefing; gameplay and cutscenes have their own audio.
+    if (m === 'menu' || m === 'intro') menuMusic.play(); else menuMusic.stop();
     if (m !== 'pda') pda.close();
     if (m !== 'storage' && storageUi.open) storageUi.close();
   };
@@ -1189,6 +1195,7 @@ async function boot(): Promise<void> {
     setTimeout(() => { menu.setLaunchBusy(false); startNewGame(); }, 650);
   };
 
+  // Built hidden: it only appears once loading has finished (it used to show on top of the loading screen).
   const menu = new MainMenu(ui, settings, {
     onNewGame: () => {
       if (!hasSave) { openBriefing(); return; }
@@ -1228,6 +1235,7 @@ async function boot(): Promise<void> {
     },
     onSettings: applySettings,
   });
+  menu.show(false);
 
   document.addEventListener('pointerlockchange', () => {
     if (input.locked) {
@@ -1778,8 +1786,11 @@ async function boot(): Promise<void> {
   // second for the whole set on the first visible frame; do it here, behind the loading screen.
   for (const program of renderer.info.programs ?? []) { program.getUniforms(); program.getAttributes(); }
   shadersWarmed = true;
-  loading.remove();
+  // The menu is revealed underneath while the intro plays its "systems online" exit and dissolves.
   setMode('menu');
+  menu.el.classList.add('entering');
+  setTimeout(() => menu.el.classList.remove('entering'), 3000);
+  await loading.finish();
   ctx.resize();
   void refreshMenuSave();
 
