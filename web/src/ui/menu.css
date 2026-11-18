@@ -1,0 +1,133 @@
+/* ---------- EXPEDITION 02 main menu v2: simple, sci-fi, reactive (src/ui/screens.ts MainMenu) ---------- */
+body.menu-cursor, body.menu-cursor #game, body.menu-cursor .menu.v2, body.menu-cursor .menu.v2 *, body.menu-cursor .overlay, body.menu-cursor .overlay * { cursor: none; }
+.menu.v2 .left { left: clamp(28px, 6vw, 96px); top: 15vh; will-change: transform, translate, opacity; transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 0.6s; }
+.menu.v2.focused .left { opacity: 0; transform: translateX(-30px); pointer-events: none; }
+
+/* HUD buttons */
+.menu.v2 .items { margin-top: 54px; gap: 8px; width: 340px; }
+.menu.v2 .hud-btn { all: unset; position: relative; display: flex; align-items: center; gap: 16px; padding: 13px 20px 13px 16px; font: 600 18px 'Rajdhani', 'Bahnschrift', sans-serif; letter-spacing: 0.24em; text-transform: uppercase; color: rgba(225, 240, 250, 0.78);
+  background: linear-gradient(100deg, rgba(10, 24, 36, 0.35), rgba(10, 24, 36, 0)); border-left: 2px solid rgba(120, 220, 255, 0.18);
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%); overflow: hidden; contain: layout paint; will-change: transform;
+  transition: color 0.2s, background 0.25s, border-color 0.25s, transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.menu.v2 .hud-btn .idx { font: 400 12px 'Share Tech Mono', monospace; letter-spacing: 0.1em; color: rgba(120, 220, 255, 0.45); transition: color 0.2s; }
+.menu.v2 .hud-btn .lbl { position: relative; white-space: nowrap; }
+.menu.v2 .hud-btn .cb { position: absolute; width: 10px; height: 10px; border: 2px solid #78dcff; opacity: 0; transition: opacity 0.2s, transform 0.25s; }
+.menu.v2 .hud-btn .c1 { left: 6px; top: 5px; border-right: 0; border-bottom: 0; transform: translate(-6px, -6px); }
+.menu.v2 .hud-btn .c2 { right: 18px; bottom: 5px; border-left: 0; border-top: 0; transform: translate(6px, 6px); }
+.menu.v2 .hud-btn .sweep { position: absolute; top: 0; bottom: 0; left: -40%; width: 40%; background: linear-gradient(100deg, transparent, rgba(160, 235, 255, 0.28), transparent); transform: translateX(-100%); pointer-events: none; }
+.menu.v2 .hud-btn:hover, .menu.v2 .hud-btn:focus-visible { color: #fff; background: linear-gradient(100deg, rgba(20, 70, 100, 0.55), rgba(20, 70, 100, 0.05)); border-left-color: #78dcff; transform: translateX(10px); text-shadow: 0 0 8px rgba(120, 220, 255, 0.7); }
+.menu.v2 .hud-btn:hover .idx, .menu.v2 .hud-btn:focus-visible .idx { color: #78dcff; }
+.menu.v2 .hud-btn:hover .cb, .menu.v2 .hud-btn:focus-visible .cb { opacity: 1; transform: none; }
+.menu.v2 .hud-btn:hover .sweep, .menu.v2 .hud-btn:focus-visible .sweep { animation: hud-sweep 0.55s ease-out; }
+@keyframes hud-sweep { from { transform: translateX(0); } to { transform: translateX(380%); } }
+.menu.v2 .hud-btn:active { transform: translateX(6px) scale(0.98); }
+.menu.v2 .hud-btn.primary { color: #fff; background: linear-gradient(100deg, rgba(255, 122, 46, 0.32), rgba(255, 122, 46, 0.02)); border-left-color: #ff7a2e; }
+.menu.v2 .hud-btn.primary .idx { color: rgba(255, 170, 120, 0.8); }
+.menu.v2 .hud-btn.primary:hover { background: linear-gradient(100deg, rgba(255, 122, 46, 0.55), rgba(255, 122, 46, 0.05)); border-left-color: #ffb07a; text-shadow: 0 0 16px rgba(255, 140, 70, 0.9); }
+.menu.v2 .hud-btn.primary .cb { border-color: #ffb07a; }
+.menu.v2 .hud-btn[disabled] { opacity: 0.3; pointer-events: none; }
+.menu.v2 .saveinfo { font: 400 12px 'Share Tech Mono', monospace; letter-spacing: 0.12em; color: rgba(190, 220, 235, 0.55); padding: 0 0 6px 50px; margin-top: -4px; }
+.menu.v2 .saveinfo:empty { display: none; }
+/* staggered entrance of the buttons */
+.menu.v2.entering .hud-btn { animation: hud-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.menu.v2.entering .hud-btn:nth-child(1) { animation-delay: 0.25s; } .menu.v2.entering .hud-btn:nth-child(2) { animation-delay: 0.32s; }
+.menu.v2.entering .hud-btn:nth-child(4) { animation-delay: 0.39s; } .menu.v2.entering .hud-btn:nth-child(5) { animation-delay: 0.46s; } .menu.v2.entering .hud-btn:nth-child(6) { animation-delay: 0.53s; }
+@keyframes hud-in { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: none; } }
+
+/* top-right status + Mars hint */
+.menu.v2 .orbit-status { position: absolute; right: clamp(18px, 3vw, 44px); top: 5vh; display: flex; align-items: center; gap: 10px; font: 400 12px 'Share Tech Mono', monospace; letter-spacing: 0.3em; color: rgba(190, 235, 255, 0.6); transition: opacity 0.5s; }
+.menu.v2 .orbit-status .live { width: 8px; height: 8px; border-radius: 50%; background: #9dffc7; box-shadow: 0 0 10px #9dffc7; animation: live-pulse 1.6s ease-in-out infinite; }
+@keyframes live-pulse { 50% { opacity: 0.3; } }
+.menu.v2.focused .orbit-status { opacity: 0; }
+.menu.v2 .orbit-hint { font: 600 14px 'Rajdhani', 'Bahnschrift', sans-serif; letter-spacing: 0.42em; color: rgba(230, 245, 255, 0.85); text-shadow: 0 0 12px rgba(120, 220, 255, 0.5); gap: 14px; padding: 10px 22px; background: rgba(6, 14, 22, 0.45); border: 1px solid rgba(120, 220, 255, 0.25); clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%); }
+.menu.v2 .orbit-hint .ring { border-color: #78dcff; box-shadow: 0 0 12px rgba(120, 220, 255, 0.7); animation: hint-ring 1.8s ease-out infinite; }
+@keyframes hint-ring { 0% { transform: scale(0.7); opacity: 1; } 100% { transform: scale(1.6); opacity: 0.2; } }
+.menu.v2.hover-mars .orbit-hint { opacity: 1; color: #fff; border-color: #78dcff; }
+.menu.v2.focused .orbit-hint, .menu.v2.focused.hover-mars .orbit-hint { opacity: 0 !important; animation: none; pointer-events: none; }
+
+/* reticle cursor */
+.menu.v2 .reticle { position: fixed; left: 0; top: 0; width: 0; height: 0; pointer-events: none; z-index: 60; transition: opacity 0.2s; will-change: transform; }
+.menu.v2 .reticle i { position: absolute; border-radius: 50%; left: 0; top: 0; transform: translate(-50%, -50%); }
+.menu.v2 .reticle .dot { width: 5px; height: 5px; background: #bff0ff; box-shadow: 0 0 8px #78dcff; }
+.menu.v2 .reticle .r1 { width: 26px; height: 26px; border: 1.5px solid rgba(120, 220, 255, 0.75); will-change: scale; transition: scale 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.25s; }
+.menu.v2 .reticle .r2 { will-change: transform; width: 40px; height: 40px; border: 1px dashed rgba(120, 220, 255, 0.35); animation: ret-spin 6s linear infinite; transition: scale 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s; }
+@keyframes ret-spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+.menu.v2 .reticle .tag { position: absolute; left: 34px; top: -26px; font: 700 13px 'Orbitron', sans-serif; letter-spacing: 0.3em; color: #fff; text-shadow: 0 0 10px #78dcff; opacity: 0; transform: translateX(-8px); transition: opacity 0.25s, transform 0.25s; white-space: nowrap; }
+.menu.v2 .reticle .tag::before { content: ""; position: absolute; left: -14px; top: 50%; width: 10px; height: 1px; background: #78dcff; }
+.menu.v2 .reticle.lock .r1 { scale: 0.7; border-color: #fff; }
+.menu.v2 .reticle.lock .r2 { scale: 0.75; }
+.menu.v2.hover-mars .reticle .r1 { scale: 2.1; border-color: #ff9a5a; }
+.menu.v2.hover-mars .reticle .r2 { scale: 1.9; border-color: rgba(255, 154, 90, 0.6); animation-duration: 2s; }
+.menu.v2.hover-mars .reticle .tag { opacity: 1; transform: none; }
+.menu.v2.focused .reticle .tag { opacity: 0; }
+
+/* mission panel (Mars) */
+.menu.v2 .mission-sidebar { overflow: hidden; will-change: transform, opacity; contain: layout paint; width: min(430px, 100vw); padding: 10vh 38px 30px; background: linear-gradient(90deg, rgba(4, 8, 14, 0) 0%, rgba(4, 8, 14, 0.82) 16%, rgba(4, 8, 14, 0.94) 100%); border-left: 1px solid rgba(120, 220, 255, 0.2); }
+.menu.v2 .mission-sidebar .eyebrow { justify-content: flex-start; align-items: center; gap: 8px; font: 400 12px 'Share Tech Mono', monospace; letter-spacing: 0.3em; color: rgba(190, 235, 255, 0.75); margin: 0 0 10px; }
+.menu.v2 .mission-sidebar .eyebrow .dot { width: 7px; height: 7px; background: #9dffc7; box-shadow: 0 0 8px #9dffc7; border-radius: 50%; }
+.menu.v2 .mission-sidebar .status-ready { color: #9dffc7; letter-spacing: 0.3em; }
+.menu.v2 .mission-sidebar .planet { font: 900 78px/1 'Orbitron', sans-serif; letter-spacing: 0.12em; background: linear-gradient(180deg, #fff 20%, #ffb07a); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.menu.v2 .mission-sidebar .sub { font: 600 14px 'Rajdhani', 'Bahnschrift', sans-serif; letter-spacing: 0.5em; color: rgba(255, 190, 150, 0.85); margin-top: 10px; }
+.menu.v2 .mission-sidebar .overview { margin: 26px 0 0; font: 500 17px/1.55 'Rajdhani', 'Bahnschrift', sans-serif; color: rgba(230, 240, 248, 0.9); }
+.menu.v2 .mission-sidebar .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 28px; }
+.menu.v2 .mission-sidebar .stat { padding: 14px 10px 12px; text-align: center; background: linear-gradient(180deg, rgba(20, 50, 70, 0.4), rgba(10, 20, 30, 0.2)); border: 1px solid rgba(120, 220, 255, 0.18); clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%); transition: border-color 0.25s, transform 0.25s, background 0.25s; }
+.menu.v2 .mission-sidebar .stat:hover { border-color: rgba(120, 220, 255, 0.6); transform: translateY(-3px); background: linear-gradient(180deg, rgba(30, 80, 110, 0.5), rgba(10, 20, 30, 0.25)); }
+.menu.v2 .mission-sidebar .stat .ic { font-size: 16px; color: #78dcff; text-shadow: 0 0 10px rgba(120, 220, 255, 0.7); }
+.menu.v2 .mission-sidebar .stat .v { margin-top: 6px; font: 700 20px 'Orbitron', sans-serif; color: #fff; letter-spacing: 0.02em; white-space: nowrap; }
+.menu.v2 .mission-sidebar .stat .l { margin-top: 4px; font: 600 12px 'Rajdhani', 'Bahnschrift', sans-serif; letter-spacing: 0.06em; color: rgba(190, 220, 235, 0.7); }
+.menu.v2.focused .mission-sidebar > * { animation: side-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.menu.v2.focused .mission-sidebar > :nth-child(2) { animation-delay: 0.15s; } .menu.v2.focused .mission-sidebar > :nth-child(3) { animation-delay: 0.22s; }
+.menu.v2.focused .mission-sidebar > :nth-child(4) { animation-delay: 0.29s; } .menu.v2.focused .mission-sidebar > :nth-child(5) { animation-delay: 0.36s; }
+.menu.v2.focused .mission-sidebar > :nth-child(6) { animation-delay: 0.43s; } .menu.v2.focused .mission-sidebar > :nth-child(7) { animation-delay: 0.52s; }
+@keyframes side-in { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: none; } }
+.menu.v2 .mission-sidebar .close { border-color: rgba(120, 220, 255, 0.3); color: rgba(190, 235, 255, 0.8); }
+.menu.v2 .mission-sidebar .close:hover { border-color: #78dcff; color: #fff; box-shadow: 0 0 12px rgba(120, 220, 255, 0.5); transform: rotate(90deg); transition: transform 0.3s, color 0.2s, border-color 0.2s; }
+
+/* LAUNCH button: charged plasma bar */
+.menu.v2 .mission-sidebar .launch { margin-top: 34px; padding: 20px 24px; border: 1px solid #ff7a2e; font: 800 16px 'Orbitron', sans-serif; letter-spacing: 0.28em; color: #fff; clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px));
+  background: linear-gradient(100deg, rgba(255, 122, 46, 0.28), rgba(255, 122, 46, 0.08)); box-shadow: inset 0 0 24px rgba(255, 122, 46, 0.25); transition: background 0.25s, box-shadow 0.25s, transform 0.2s; }
+.menu.v2 .mission-sidebar .launch .txt { position: relative; z-index: 1; }
+.menu.v2 .mission-sidebar .launch i { position: relative; z-index: 1; }
+.menu.v2 .mission-sidebar .launch .fill { position: absolute; inset: 0; background: linear-gradient(100deg, #ff7a2e, #ffb07a); transform: scaleX(0); transform-origin: 0 50%; transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1); opacity: 0.35; }
+.menu.v2 .mission-sidebar .launch:hover { box-shadow: inset 0 0 30px rgba(255, 122, 46, 0.45), 0 0 30px rgba(255, 122, 46, 0.35); transform: translateY(-2px); letter-spacing: 0.28em; }
+.menu.v2 .mission-sidebar .launch:hover .fill { transform: scaleX(1); }
+.menu.v2 .mission-sidebar .launch:active { transform: scale(0.98); }
+.menu.v2 .mission-sidebar .launch::before { background: linear-gradient(90deg, transparent, rgba(255, 220, 190, 0.5), transparent); z-index: 1; }
+
+/* ---------- launch sequence ---------- */
+.menu.v2.launching .left, .menu.v2.launching .mission-sidebar, .menu.v2.launching .orbit-status, .menu.v2.launching .orbit-hint, .menu.v2.launching .reticle { transition: opacity 0.4s, transform 0.6s cubic-bezier(0.6, 0, 0.8, 0.2); opacity: 0 !important; }
+.menu.v2.launching .mission-sidebar { transform: translateX(60px) !important; }
+.menu.v2.launching .mission-sidebar .launch .fill { transform: scaleX(1); opacity: 1; transition: transform 0.35s; }
+body.warping #game { animation: warp 2.6s cubic-bezier(0.5, 0, 0.9, 0.4) forwards; transform-origin: 62% 50%; will-change: transform; }
+@keyframes warp { 0% { transform: scale(1); } 70% { transform: scale(1.35); } 100% { transform: scale(2.2); } }
+.launch-seq { position: absolute; inset: 0; z-index: 70; display: grid; place-content: center; justify-items: center; text-align: center; pointer-events: none; background: radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, 0) 30%, rgba(0, 0, 0, 0.6) 100%); animation: ls-in 0.35s ease-out both; }
+@keyframes ls-in { from { opacity: 0; } to { opacity: 1; } }
+.launch-seq::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(0deg, rgba(120, 220, 255, 0.05) 0 1px, transparent 1px 4px); }
+.ls-frame { position: absolute; left: 50%; top: 50%; width: 620px; height: 320px; transform: translate(-50%, -50%); animation: ls-frame 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.ls-frame i { position: absolute; width: 40px; height: 40px; border: 2px solid #78dcff; box-shadow: 0 0 12px rgba(120, 220, 255, 0.6); }
+.ls-frame .c1 { left: 0; top: 0; border-right: 0; border-bottom: 0; } .ls-frame .c2 { right: 0; top: 0; border-left: 0; border-bottom: 0; }
+.ls-frame .c3 { left: 0; bottom: 0; border-right: 0; border-top: 0; } .ls-frame .c4 { right: 0; bottom: 0; border-left: 0; border-top: 0; }
+@keyframes ls-frame { from { transform: translate(-50%, -50%) scale(1.5); opacity: 0; } to { transform: translate(-50%, -50%); opacity: 1; } }
+.ls-eyebrow { font: 400 14px 'Share Tech Mono', monospace; letter-spacing: 0.4em; color: #78dcff; }
+.ls-title { margin-top: 10px; font: 900 44px 'Orbitron', sans-serif; letter-spacing: 0.2em; color: #fff; text-shadow: 0 0 24px rgba(120, 220, 255, 0.7); }
+.ls-count { margin-top: 6px; font: 900 120px/1.1 'Orbitron', sans-serif; color: #ff7a2e; text-shadow: 0 0 40px rgba(255, 122, 46, 0.8); }
+.ls-count.pop { animation: ls-pop 0.45s cubic-bezier(0.2, 0.9, 0.2, 1); }
+@keyframes ls-pop { 0% { transform: scale(1.8); opacity: 0; } 40% { opacity: 1; } 100% { transform: none; opacity: 1; } }
+.ls-bar { margin-top: 14px; width: 420px; height: 4px; background: rgba(120, 220, 255, 0.15); overflow: hidden; }
+.ls-bar i { display: block; height: 100%; background: linear-gradient(90deg, #78dcff, #fff); box-shadow: 0 0 12px #78dcff; transform-origin: 0 50%; animation: ls-bar 1.9s linear both; }
+@keyframes ls-bar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.ls-flash { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 50%, #fff, rgba(160, 235, 255, 0.6) 40%, transparent 75%); opacity: 0; }
+.ls-black { position: absolute; inset: 0; background: #000; opacity: 0; }
+.launch-seq.go .ls-flash { animation: ls-flash 0.7s ease-out forwards; }
+.launch-seq.go .ls-black { animation: ls-black 0.7s ease-in 0.2s forwards; }
+@keyframes ls-flash { 0% { opacity: 0; } 20% { opacity: 1; } 100% { opacity: 0.3; } }
+@keyframes ls-black { to { opacity: 1; } }
+
+@media (max-height: 640px) { .menu.v2 .mission-sidebar { overflow-y: auto; } }
+@media (max-width: 760px) {
+  .menu.v2 .items { width: 86vw; }
+  .menu.v2 .mission-sidebar .stats { grid-template-columns: 1fr; }
+  .ls-frame { width: 90vw; }
+  .menu.v2, .menu.v2 * { cursor: auto; } .menu.v2 .reticle { display: none; }
+}
+@media (hover: none) { .menu.v2, .menu.v2 * { cursor: auto; } .menu.v2 .reticle { display: none; } }

@@ -1179,7 +1179,7 @@ async function boot(): Promise<void> {
   canvas.addEventListener('click', (e) => {
     if (!menuInteractive() || menu.sidebarOpen) return;
     const [x, y] = ndc(e);
-    if (space.hitMars(x, y)) { audio.start(); audio.ui('interact'); menu.showSidebar(true); }
+    if (space.hitMars(x, y)) { audio.start(); menu.showSidebar(true); }
   });
   /** NEW EXPEDITION: Mars selection + Mission Control briefing (script scene 02). */
   const openBriefing = () => {
@@ -1188,11 +1188,14 @@ async function boot(): Promise<void> {
     audio.start();
     voice.say('o_brief');
   };
-  const launchExpedition = () => {
+  /** LAUNCH EXPEDITION: countdown + warp transition (MainMenu.playLaunch), then the opening. */
+  const launchExpedition = async () => {
     menu.setLaunchBusy(true);
     voice.flush();
-    audio.cue('whoosh');
-    setTimeout(() => { menu.setLaunchBusy(false); startNewGame(); }, 650);
+    menuMusic.stop(2.2);
+    await menu.playLaunch();
+    menu.setLaunchBusy(false);
+    startNewGame();
   };
 
   // Built hidden: it only appears once loading has finished (it used to show on top of the loading screen).
@@ -1206,9 +1209,9 @@ async function boot(): Promise<void> {
       ]);
     },
     onLaunch: () => {
-      if (!hasSave) { launchExpedition(); return; }
+      if (!hasSave) { void launchExpedition(); return; }
       overlay = card(ui, 'LAUNCH EXPEDITION', 'Overwrite your saved mission?', ['Launching a new expedition replaces your saved mission progress. Use CONTINUE MISSION to resume it instead.'], [
-        { label: 'Launch new expedition', primary: true, fn: () => { clearOverlay(); void saveStore.clear().then(() => { hasSave = false; void refreshMenuSave(); launchExpedition(); }); } },
+        { label: 'Launch new expedition', primary: true, fn: () => { clearOverlay(); void saveStore.clear().then(() => { hasSave = false; void refreshMenuSave(); void launchExpedition(); }); } },
         { label: 'Cancel', fn: clearOverlay },
       ]);
     },
@@ -1216,7 +1219,6 @@ async function boot(): Promise<void> {
       menuTarget.focus = open ? 1 : 0;
       menuTarget.selected = open ? 1 : 0;
       audio.start();
-      audio.ui(open ? 'scan' : 'notice');
       if (!open) voice.flush();
     },
     onExit: () => {

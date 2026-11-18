@@ -8,6 +8,21 @@ import { RECORDS } from '../missions/records';
 import type { Inventory } from '../inventory/inventory';
 import { itemDef } from '../inventory/items';
 import { inventoryGrid } from './inventoryUi';
+import { sfx, preloadSfx } from '../audio/menuMusic';
+import './menu.css';
+
+const SCRAMBLE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#/<>';
+/** Quick "decode" of a label: random glyphs settle into the real text left to right (~0.3 s). */
+function scramble(el: HTMLElement, text: string): void {
+  const t0 = performance.now();
+  const step = () => {
+    const k = (performance.now() - t0) / 300;
+    const n = Math.floor(k * text.length);
+    el.textContent = text.split('').map((c, i) => (i < n || c === ' ' ? c : SCRAMBLE[Math.floor(Math.random() * SCRAMBLE.length)])).join('');
+    if (k < 1) requestAnimationFrame(step); else el.textContent = text;
+  };
+  step();
+}
 
 export interface EnvReading { label: string; value: string; kind: 'nasa' | 'sim'; source?: string }
 export interface RoverPanel { status: string; battery: number; charging: boolean; condition: number; x: number; z: number; distance: number; odometer: number; pitchDeg: number; rollDeg: number; signal: number; linkable: boolean; why?: string }
@@ -53,16 +68,6 @@ export interface MenuHandlers {
   onExit(): void;
 }
 
-/** NASA Mars Fact Sheet values (nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html). */
-const MARS_FACTS: Array<[string, string]> = [
-  ['Diameter', '6,792 km (equatorial)'],
-  ['Surface gravity', '3.71 m/s² · 0.38 g'],
-  ['Mean temperature', '≈ −63 °C (210 K)'],
-  ['Atmosphere', 'CO₂ 95.1% · N₂ 2.6% · Ar 1.9% · O₂ 0.16%'],
-  ['Surface pressure', '≈ 6.1 mbar (0.6% of Earth)'],
-  ['Distance from Earth', '54.6 – 401 million km'],
-  ['Solar day (sol)', '24 h 39 m 35 s'],
-];
 
 const CONTROLS: Array<[string, string]> = [
   ['Move', 'W A S D'], ['Look', 'Mouse'], ['Sprint', 'Shift'], ['Jump', 'Space'], ['Interact', 'E'], ['Suit lamp', 'F'],
@@ -85,13 +90,24 @@ export class MainMenu {
   private hint: HTMLElement;
   private launchBtn: HTMLButtonElement;
   private sideStatus: HTMLElement;
+  private reticle!: HTMLElement;
+  private left!: HTMLElement;
   sidebarOpen = false;
 
   constructor(parent: HTMLElement, private settings: Settings, private readonly handlers: MenuHandlers) {
     this.sheet = h('div.sheet.panel.interactive.hidden');
-    const item = (label: string, fn: () => void, primary = false) =>
-      h<'button'>('button' + (primary ? '.primary' : ''), { onclick: fn }, h('span.ico'), label);
-    this.continueBtn = item('Continue Mission', () => handlers.onContinue());
+    preloadSfx(['ui_hover', 'ui_select', 'panel_open', 'launch', 'ui_tick', 'braam_a']);
+    let idx = 0;
+    /** HUD menu button: index, label (scrambles on hover), corner brackets and a light sweep; sci-fi hover/select sounds. */
+    const item = (label: string, fn: () => void, primary = false) => {
+      const lbl = h('span.lbl', null, label);
+      const b = h<'button'>('button.hud-btn' + (primary ? '.primary' : ''), { onclick: () => { if (b.disabled) return; sfx('ui_select', 0.55); fn(); } },
+        h('span.idx', null, String(++idx).padStart(2, '0')), lbl, h('span.cb.c1'), h('span.cb.c2'), h('span.sweep'));
+      b.addEventListener('pointerenter', () => { this.el.classList.remove('hover-mars'); if (b.disabled) return; sfx('ui_hover', 0.3); scramble(lbl, label); this.reticle.classList.add('lock'); });
+      b.addEventListener('pointerleave', () => this.reticle.classList.remove('lock'));
+      return b;
+    };
+    this.continueBtn = item('Continue', () => handlers.onContinue());
     this.continueBtn.disabled = true;
     this.continueBtn.title = 'No saved mission yet';
     this.saveInfo = h('div.saveinfo');
@@ -104,33 +120,47 @@ export class MainMenu {
       item('Credits', () => this.showCredits()),
       item('Exit', () => handlers.onExit()),
     );
-    this.telemetry = h('div.orbit-telemetry');
-    this.hint = h('div.orbit-hint', null, h('span.ring'), 'SELECT MARS TO REVIEW THE MISSION');
-    this.launchBtn = h<'button'>('button.launch', { onclick: () => handlers.onLaunch() }, h('span', null, 'LAUNCH EXPEDITION'), h('i'));
-    this.sideStatus = h('span.status-ready', null, 'READY FOR DEPLOYMENT');
+    // Minimal status (the old telemetry block was a wall of numbers)
+    this.telemetry = h('div.orbit-status', null, h('span.live'), 'MARS ORBIT · LIVE');
+    this.hint = h('div.orbit-hint', null, h('span.ring'), 'CLICK MARS TO BEGIN');
+    this.launchBtn = h<'button'>('button.launch', { onclick: () => { if (!this.launchBtn.disabled) handlers.onLaunch(); } }, h('span.fill'), h('span.txt', null, 'LAUNCH EXPEDITION'), h('i'));
+    this.launchBtn.addEventListener('pointerenter', () => { if (!this.launchBtn.disabled) sfx('ui_hover', 0.35); });
+    this.sideStatus = h('span.status-ready', null, 'READY');
+    const stat = (icon: string, value: string, label: string) => h('div.stat', null, h('div.ic', null, icon), h('div.v', null, value), h('div.l', null, label));
+    const close = h('button.close', { onclick: () => { sfx('ui_select', 0.4); this.showSidebar(false); }, title: 'Back' }, '×');
     this.sidebar = h('aside.mission-sidebar.interactive', null,
-      h('button.close', { onclick: () => this.showSidebar(false), title: 'Back to orbital view' }, '×'),
-      h('div.eyebrow', null, 'DESTINATION'),
+      close,
+      h('div.eyebrow', null, h('span.dot'), 'DESTINATION · ', this.sideStatus),
       h('div.planet', null, 'MARS'),
-      h('div.sub', null, 'SOL SYSTEM · FOURTH PLANET'),
-      h('dl.meta', null,
-        h('dt', null, 'Mission designation'), h('dd', null, 'EXPEDITION 02'),
-        h('dt', null, 'Mission status'), h('dd', null, this.sideStatus),
-        h('dt', null, 'Landing region'), h('dd', null, 'Arcadia Planitia · 46° N 150° W', h('small', null, 'Region: NASA subsurface-ice mapping target (SWIM). Local terrain in-game: fictional (CinderRain).'))),
-      h('div.eyebrow', null, 'MISSION OVERVIEW'),
-      h('p.overview', null, "Humanity's next great exploration frontier awaits. Journey to the Martian surface, investigate its geological formations, analyze its environment, and uncover discoveries that could change our understanding of the Red Planet."),
-      h('div.eyebrow', null, 'PLANETARY DATA', h('span.src', null, 'NASA Mars Fact Sheet')),
-      h('table.facts', null, ...MARS_FACTS.map(([k, v]) => h('tr', null, h('td', null, k), h('td', null, v)))),
+      h('div.sub', null, 'THE RED PLANET'),
+      h('p.overview', null, 'Ten years ago, the first expedition went silent. Land, restore their outpost and find out what they discovered.'),
+      h('div.stats', null, stat('▼', '38%', 'of Earth gravity'), stat('❄', '−63 °C', 'Average temperature'), stat('◷', '24 h 40 m', 'Length of a day')),
       this.launchBtn,
     );
-    this.el = h('div.menu.orbital', null,
-      h('div.left', null, wordmark(), items),
+    this.reticle = h('div.reticle', null, h('i.r1'), h('i.r2'), h('i.dot'), h('span.tag', null, 'MARS'));
+    this.left = h('div.left', null, wordmark(), items);
+    this.el = h('div.menu.orbital.v2', null,
+      this.left,
       this.telemetry,
       this.hint,
       this.sidebar,
       this.sheet,
-      h('div.build', null, 'ORBITAL COMMAND · Browser build v0.3 · Mars data: NASA / MGS MOLA / Viking MDIM'),
+      this.reticle,
     );
+    // sci-fi reticle cursor + gentle parallax of the menu panel, applied at most once per frame (compositor-only:
+    // `transform` on the reticle, the independent `translate` property on the panel)
+    let mx = 0, my = 0, queued = false;
+    const apply = () => {
+      queued = false;
+      this.reticle.style.transform = `translate3d(${mx}px, ${my}px, 0)`;
+      const px = (mx / window.innerWidth - 0.5) * 2, py = (my / window.innerHeight - 0.5) * 2;
+      this.left.style.translate = `${(-px * 8).toFixed(1)}px ${(-py * 6).toFixed(1)}px`;
+    };
+    window.addEventListener('pointermove', (e) => {
+      if (this.el.classList.contains('hidden')) return;
+      mx = e.clientX; my = e.clientY;
+      if (!queued) { queued = true; requestAnimationFrame(apply); }
+    }, { passive: true });
     parent.append(this.el);
   }
 
@@ -143,6 +173,7 @@ export class MainMenu {
 
   show(on: boolean): void {
     this.el.classList.toggle('hidden', !on);
+    document.body.classList.toggle('menu-cursor', on); // the sci-fi reticle replaces the pointer on the menu
     if (!on) { this.sheet.classList.add('hidden'); this.showSidebar(false, true); }
   }
 
@@ -150,22 +181,53 @@ export class MainMenu {
   showSidebar(on: boolean, silent = false): void {
     if (on === this.sidebarOpen) return;
     this.sidebarOpen = on;
+    if (on && !silent) sfx('panel_open', 0.55);
     this.el.classList.toggle('focused', on);
-    if (on) this.sheet.classList.add('hidden');
+    if (on) { this.sheet.classList.add('hidden'); this.el.classList.remove('hover-mars'); }
     if (!silent) this.handlers.onSidebar(on);
   }
 
-  /** Planet hover (cursor over Mars). */
-  setHover(on: boolean): void { this.el.classList.toggle('hover-mars', on); }
-
-  /** Live orbital read-out (right edge). */
-  setTelemetry(lines: string[]): void {
-    if (this.telemetry.childElementCount !== lines.length) this.telemetry.replaceChildren(...lines.map(() => h('div')));
-    lines.forEach((l, i) => { (this.telemetry.children[i] as HTMLElement).textContent = l; });
+  /** Planet hover (cursor over Mars): the reticle locks on and tags it. */
+  setHover(on: boolean): void {
+    if (on && !this.el.classList.contains('hover-mars')) sfx('ui_hover', 0.35);
+    this.el.classList.toggle('hover-mars', on);
   }
 
+  /** Kept for the game loop's calls; the menu now shows one simple status line instead of telemetry. */
+  setTelemetry(_lines: string[]): void { /* intentionally minimal */ }
+
   /** Disables Launch while the launch transition runs. */
-  setLaunchBusy(busy: boolean): void { this.launchBtn.disabled = busy; this.sideStatus.textContent = busy ? 'LAUNCH SEQUENCE INITIATED' : 'READY FOR DEPLOYMENT'; }
+  setLaunchBusy(busy: boolean): void { this.launchBtn.disabled = busy; this.sideStatus.textContent = busy ? 'LAUNCHING' : 'READY'; }
+
+  /**
+   * Launch transition (~2.6 s): the button charges, the menu slides away, a LAUNCH SEQUENCE HUD counts down 3-2-1, the
+   * view warps toward Mars, then a flash and fade to black. Resolves when the screen is black.
+   */
+  async playLaunch(): Promise<void> {
+    const count = h('div.ls-count', null, '3');
+    const seq = h('div.launch-seq', null,
+      h('div.ls-frame', null, h('i.c1'), h('i.c2'), h('i.c3'), h('i.c4')),
+      h('div.ls-eyebrow', null, 'EXPEDITION 02 · MARS TRANSFER'),
+      h('div.ls-title', null, 'LAUNCH SEQUENCE'),
+      count,
+      h('div.ls-bar', null, h('i')),
+      h('div.ls-flash'), h('div.ls-black'),
+    );
+    const pop = (t: string) => { count.textContent = t; count.classList.remove('pop'); void count.offsetWidth; count.classList.add('pop'); };
+    const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+    this.el.classList.add('launching');
+    document.body.classList.add('warping');
+    sfx('launch', 0.85);
+    await wait(420);
+    this.el.append(seq);
+    for (const n of ['3', '2', '1']) { pop(n); sfx('ui_tick', 0.6); await wait(480); }
+    pop('GO');
+    seq.classList.add('go');
+    sfx('braam_a', 0.6);
+    await wait(700);
+    // the black screen holds while the opening takes over, then everything resets
+    setTimeout(() => { seq.remove(); this.el.classList.remove('launching'); document.body.classList.remove('warping'); }, 900);
+  }
 
   private open(title: string, ...body: Array<Node | string>): void {
     this.sheet.replaceChildren(h('h3', null, title), ...body);
