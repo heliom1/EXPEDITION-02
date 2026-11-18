@@ -1,5 +1,5 @@
 ﻿import './ui/styles.css';
-import { AnimationMixer, Box3, Color, PMREMGenerator, Group, MeshStandardMaterial, PerspectiveCamera, PointLight, SpotLight, Vector3, WebGLRenderTarget, DepthTexture, FloatType, HalfFloatType, Raycaster, type Camera, type Mesh, type ShaderMaterial, type Object3D, type Scene } from 'three';
+import { AnimationMixer, Box3, Color, PMREMGenerator, Group, MeshStandardMaterial, PerspectiveCamera, PointLight, SpotLight, Vector3, WebGLRenderTarget, DepthTexture, FloatType, HalfFloatType, Raycaster, type Camera, type Mesh, type ShaderMaterial, type Texture, type Object3D, type Scene } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
@@ -1781,17 +1781,49 @@ async function boot(): Promise<void> {
   loading.set(0.97, 'Compiling shaders');
   // All on the loading screen: compiling this many programs stalls the page even with parallel compilation.
   await Promise.race([Promise.all([bodyReady, actorReady]), new Promise((r) => setTimeout(r, 20000))]);
-  await Promise.all([warmShaders(scene), warmShaders(tool.scene, tool.camera, tool.scene), warmTransmissionShaders(scene)]);
-  // A compiled program is still validated (and its uniforms looked up) the first time it draws, which took over a
-  // second for the whole set on the first visible frame; do it here, behind the loading screen.
-  for (const program of renderer.info.programs ?? []) { program.getUniforms(); program.getAttributes(); }
+  // (the orbital space scene behind the main menu too — its first frame used to compile mid-transition and freeze it).
+  // Done in small batches with a frame in between so the loading screen keeps animating instead of freezing.
+  const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
+  const batches = async (root: Object3D, cam: Camera, target: Scene, linear = false) => {
+    const objs: Object3D[] = [];
+    root.traverse((o) => { if ((o as Mesh).isMesh || (o as unknown as { isPoints?: boolean }).isPoints || (o as unknown as { isSprite?: boolean }).isSprite || (o as unknown as { isLine?: boolean }).isLine) objs.push(o); });
+    for (let i = 0; i < objs.length; i += 6) {
+      if (linear) { linearTarget ??= new WebGLRenderTarget(1, 1, { type: HalfFloatType }); renderer.setRenderTarget(linearTarget); }
+      for (const o of objs.slice(i, i + 6)) renderer.compile(o, cam, target);
+      if (linear) renderer.setRenderTarget(null);
+      await nextFrame();
+    }
+  };
+  await batches(scene, camera, scene);
+  await batches(tool.scene, tool.camera, tool.scene);
+  await batches(space.scene, space.camera, space.scene);
+  await batches(scene, camera, scene, true);
+  // A compiled program is still validated (and its uniforms looked up) the first time it draws — over a second for the
+  // whole set on the first visible frame; do it here, a few programs per frame, behind the loading screen.
+  // Upload every texture to the GPU a few per frame (the first frames otherwise upload them all at once).
+  const texs = new Set<Texture>();
+  for (const root of [scene, space.scene, tool.scene]) root.traverse((o) => {
+    const ms = (o as Mesh).material; if (!ms) return;
+    for (const m of Array.isArray(ms) ? ms : [ms]) for (const v of Object.values(m as unknown as Record<string, unknown>).concat(Object.values((m as unknown as { uniforms?: Record<string, { value: unknown }> }).uniforms ?? {}).map((u) => u?.value))) {
+      if ((v as Texture | null)?.isTexture) texs.add(v as Texture);
+    }
+  });
+  let up = 0;
+  for (const tx of texs) { renderer.initTexture(tx); if (++up % 3 === 0) await nextFrame(); }
+  const progs = renderer.info.programs ?? [];
+  for (let i = 0; i < progs.length; i++) { progs[i].getUniforms(); progs[i].getAttributes(); if (i % 4 === 3) await nextFrame(); }
   shadersWarmed = true;
-  // The menu is revealed underneath while the intro plays its "systems online" exit and dissolves.
+  // The menu is revealed underneath while the intro plays its "systems online" exit and dissolves. Start the game loop
+  // now and let the menu render a few frames behind the (still opaque) intro, so first-frame costs (texture uploads,
+  // program first use) are paid before the dissolve and it reveals a live, moving menu instead of a frozen one.
   setMode('menu');
-  menu.el.classList.add('entering');
-  setTimeout(() => menu.el.classList.remove('entering'), 3000);
-  await loading.finish();
   ctx.resize();
+  loop.start();
+  await new Promise<void>((r) => { let n = 0; const f = () => (++n >= 12 ? r() : requestAnimationFrame(f)); requestAnimationFrame(f); });
+  await loading.finish(() => {
+    menu.el.classList.add('entering');
+    setTimeout(() => menu.el.classList.remove('entering'), 2500);
+  });
   void refreshMenuSave();
 
   /** Plays a cutscene from where it happens in the mission, then returns to the menu (?cutscene=<id>, dev/test API). */

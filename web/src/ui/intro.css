@@ -1,6 +1,7 @@
 /* ---------- sci-fi intro / loading (src/ui/intro.ts) ---------- */
 :root { --hud: #78dcff; --hud-dim: rgba(120, 220, 255, 0.35); --sci: 'Orbitron', 'Bahnschrift', 'Segoe UI', system-ui, sans-serif; --mono: 'Share Tech Mono', ui-monospace, monospace; }
-.intro { position: absolute; inset: 0; z-index: 100; overflow: hidden; background: #04060a; color: #eaf6ff; pointer-events: auto; }
+.intro { position: absolute; inset: 0; z-index: 100; overflow: hidden; background: #04060a; color: #eaf6ff; pointer-events: auto; will-change: opacity; }
+.intro-center, .intro-flash { will-change: transform, opacity; }
 .intro-bg { position: absolute; inset: 0; width: 100%; height: 100%; }
 .intro::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.22) 0 1px, transparent 1px 3px), radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.65) 100%); }
 .intro-scan { position: absolute; left: 0; right: 0; height: 120px; top: -120px; background: linear-gradient(180deg, transparent, rgba(120, 220, 255, 0.06) 60%, rgba(160, 235, 255, 0.18) 98%, transparent); animation: intro-scan 5.5s linear 1.2s infinite; pointer-events: none; }
@@ -13,7 +14,7 @@
 
 /* title plate: angled glass panel with HUD brackets and a light sweep */
 .intro-plate { position: relative; padding: 34px 46px 30px; background: linear-gradient(110deg, rgba(10, 22, 34, 0.72), rgba(6, 12, 20, 0.45) 60%, rgba(6, 12, 20, 0.15)); border-left: 2px solid var(--hud-dim);
-  clip-path: polygon(0 0, calc(100% - 46px) 0, 100% 46px, 100% 100%, 46px 100%, 0 calc(100% - 46px)); backdrop-filter: blur(3px);
+  clip-path: polygon(0 0, calc(100% - 46px) 0, 100% 46px, 100% 100%, 46px 100%, 0 calc(100% - 46px));
   opacity: 0; animation: intro-plate 0.7s ease-out 0.45s forwards; overflow: hidden; }
 @keyframes intro-plate { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: none; } }
 .intro-plate .br { position: absolute; width: 26px; height: 26px; border: 2px solid var(--hud); opacity: 0; animation: intro-br 0.5s ease-out 0.55s forwards; }
@@ -39,7 +40,7 @@
 .intro-num .r { color: #ff2a4a; animation: intro-rgb-r 0.6s steps(6) 1.95s both; }
 .intro-num .c { color: #2af0ff; animation: intro-rgb-c 0.6s steps(6) 1.95s both; }
 .intro-num .m { position: relative; text-shadow: 0 0 30px rgba(255, 122, 46, 0.7); }
-@keyframes intro-num { 0% { opacity: 0; transform: scale(2.4); filter: blur(10px); } 60% { opacity: 1; transform: scale(0.94); filter: blur(0); } 100% { opacity: 1; transform: none; } }
+@keyframes intro-num { 0% { opacity: 0; transform: scale(2.4); } 60% { opacity: 1; transform: scale(0.94); } 100% { opacity: 1; transform: none; } }
 @keyframes intro-rgb-r { 0% { transform: translate(-16px, 2px); opacity: 0.9; } 100% { transform: translate(-2px, 0); opacity: 0.45; } }
 @keyframes intro-rgb-c { 0% { transform: translate(16px, -2px); opacity: 0.9; } 100% { transform: translate(2px, 0); opacity: 0.45; } }
 .intro-rule { height: 2px; margin-top: 22px; background: linear-gradient(90deg, var(--hud), rgba(120, 220, 255, 0.15) 70%, transparent); transform-origin: 0 50%; transform: scaleX(0); animation: intro-rule 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 2.15s forwards; }
@@ -104,7 +105,7 @@
 .intro.leaving .intro-center { animation: intro-out 0.9s cubic-bezier(0.6, 0, 0.8, 0.2) forwards; }
 .intro.leaving { animation: intro-dissolve 0.9s ease-in forwards; }
 @keyframes intro-flash { 0% { opacity: 0; } 15% { opacity: 1; } 100% { opacity: 0; } }
-@keyframes intro-out { to { transform: translateY(-54%) scale(1.08); filter: blur(12px); opacity: 0; } }
+@keyframes intro-out { to { transform: translateY(-54%) scale(1.08); opacity: 0; } }
 @keyframes intro-dissolve { 0%, 40% { opacity: 1; } 100% { opacity: 0; } }
 @media (max-width: 760px) { .intro-checks { grid-template-columns: 1fr; } .intro-tele.tr, .intro-tele.brr { display: none; } }
 @media (prefers-reduced-motion: reduce) { .intro, .intro * { animation-duration: 0.01s !important; animation-delay: 0s !important; } }
@@ -117,4 +118,4 @@
 .menu.orbital .tagline { font: 600 13px 'Rajdhani', 'Bahnschrift', sans-serif; letter-spacing: 0.62em; color: rgba(190, 235, 255, 0.8); margin-top: 14px; padding-left: 28px; }
 .menu.orbital .items button { font-family: 'Rajdhani', 'Bahnschrift', sans-serif; font-weight: 600; font-size: 18px; letter-spacing: 0.22em; }
 .menu.orbital.entering .left { animation: menu-in 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
-@keyframes menu-in { from { opacity: 0; transform: translateX(-40px); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes menu-in { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: none; } }

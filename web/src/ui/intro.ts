@@ -162,7 +162,7 @@ export class LoadingScreen {
   }
 
   /** Completes the bar, shows ALL SYSTEMS ONLINE, then flashes and dissolves (resolves when gone). */
-  async finish(): Promise<void> {
+  async finish(onLeave?: () => void): Promise<void> {
     this.progress = 1;
     this.gate.classList.add('ready');
     await this.startedP;
@@ -174,6 +174,7 @@ export class LoadingScreen {
     sfx('online', 0.7);
     await new Promise((r) => setTimeout(r, 750));
     this.el.classList.add('leaving');
+    onLeave?.();
     sfx('whoosh_b', 0.6);
     await new Promise((r) => setTimeout(r, 900));
     this.remove();
@@ -192,16 +193,38 @@ export class LoadingScreen {
   // ------------------------------------------------------------------ animation
   private stars: Array<{ x: number; y: number; z: number; tw: number }> = Array.from({ length: 420 }, () => ({ x: Math.random(), y: Math.random(), z: Math.random(), tw: Math.random() * 6.28 }));
 
+  /** Static hex grid, drawn once per size (it was hundreds of strokes every frame). */
+  private hexLayer: HTMLCanvasElement | null = null;
+
   private resize = (): void => {
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    // 1.5× cap: the background is soft and full-screen; this keeps it cheap while the 3D menu renders underneath
+    const dpr = Math.min(1.5, window.devicePixelRatio || 1);
     this.canvas.width = Math.round(window.innerWidth * dpr);
     this.canvas.height = Math.round(window.innerHeight * dpr);
+    this.hexLayer = null;
   };
+
+  private hexes(W: number, H: number): HTMLCanvasElement {
+    if (this.hexLayer) return this.hexLayer;
+    const c = document.createElement('canvas'); c.width = W; c.height = H;
+    const g = c.getContext('2d')!;
+    const hs = 34 * (W / 1600);
+    g.strokeStyle = 'rgba(120, 220, 255, 0.045)'; g.lineWidth = 1;
+    g.beginPath();
+    for (let row = 0; row * hs * 0.86 < H; row++) for (let col = 0; col * hs * 1.5 < W * 0.55; col++) {
+      const x = col * hs * 1.5, y = row * hs * 1.73 + (col % 2) * hs * 0.86;
+      for (let k = 0; k <= 6; k++) { const a = (k / 6) * Math.PI * 2; const px = x + Math.cos(a) * hs * 0.5, py = y + Math.sin(a) * hs * 0.5; if (k) g.lineTo(px, py); else g.moveTo(px, py); }
+    }
+    g.stroke();
+    this.hexLayer = c;
+    return c;
+  }
 
   private frame = (now: number): void => {
     if (!this.alive) return;
     const t = (now - this.t0) / 1000;
-    this.drawBackground(t);
+    // once dissolving, the last background frame is kept (no redraw while the 3D menu fades in underneath)
+    if (!this.el.classList.contains('leaving')) this.drawBackground(t);
     this.animateTitle(this.started ? t : -1);
     this.gatePct.textContent = `${Math.round(this.progress * 100)}%`;
     // progress display eases toward the real value
@@ -268,22 +291,25 @@ export class LoadingScreen {
       return [cx + x * R, cy - y2 * R, z2] as const;
     };
     g.lineWidth = Math.max(1, W / 1600);
-    const line = (pts: Array<readonly [number, number, number]>, alpha: number) => {
+    // all segments go into two paths (near side bright, far side faint) — two strokes instead of ~1200
+    const front = new Path2D(), back = new Path2D();
+    const line = (pts: Array<readonly [number, number, number]>) => {
       for (let i = 1; i < pts.length; i++) {
         const [x0, y0, z0] = pts[i - 1], [x1, y1, z1] = pts[i];
-        const front = (z0 + z1) * 0.5;
-        g.strokeStyle = `rgba(255, 150, 80, ${(alpha * (front > 0 ? 0.9 : 0.18)).toFixed(3)})`;
-        g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke();
+        const p = z0 + z1 > 0 ? front : back;
+        p.moveTo(x0, y0); p.lineTo(x1, y1);
       }
     };
     for (let la = -75; la <= 75; la += 15) {
       const pts = []; for (let lo = 0; lo <= 360; lo += 6) pts.push(proj((la * Math.PI) / 180, (lo * Math.PI) / 180));
-      line(pts, 0.35);
+      line(pts);
     }
     for (let lo = 0; lo < 360; lo += 20) {
       const pts = []; for (let la = -90; la <= 90; la += 6) pts.push(proj((la * Math.PI) / 180, (lo * Math.PI) / 180));
-      line(pts, 0.28);
+      line(pts);
     }
+    g.strokeStyle = 'rgba(255, 150, 80, 0.06)'; g.stroke(back);
+    g.strokeStyle = 'rgba(255, 150, 80, 0.3)'; g.stroke(front);
     // landing-site marker pulsing on the globe (Arcadia Planitia)
     const [mx, my, mz] = proj((46.7 * Math.PI) / 180, (-150.4 * Math.PI) / 180);
     if (mz > 0) {
@@ -299,14 +325,7 @@ export class LoadingScreen {
     const ox = cx + Math.cos(oa) * R * 1.45 * Math.cos(-0.2) - Math.sin(oa) * R * 0.36 * Math.sin(-0.2);
     const oy = cy + Math.cos(oa) * R * 1.45 * Math.sin(-0.2) + Math.sin(oa) * R * 0.36 * Math.cos(-0.2);
     g.fillStyle = 'rgba(160, 235, 255, 0.9)'; g.fillRect(ox - 2, oy - 2, 4, 4);
-    // hex grid (faint, left side)
-    const hs = 34 * (W / 1600);
-    g.strokeStyle = 'rgba(120, 220, 255, 0.045)'; g.lineWidth = 1;
-    for (let row = 0; row * hs * 0.86 < H; row++) for (let col = 0; col * hs * 1.5 < W * 0.55; col++) {
-      const x = col * hs * 1.5, y = row * hs * 1.73 + (col % 2) * hs * 0.86;
-      g.beginPath();
-      for (let k = 0; k <= 6; k++) { const a = (k / 6) * Math.PI * 2; const px = x + Math.cos(a) * hs * 0.5, py = y + Math.sin(a) * hs * 0.5; if (k) g.lineTo(px, py); else g.moveTo(px, py); }
-      g.stroke();
-    }
+    // hex grid (faint, left side) — cached
+    g.drawImage(this.hexes(W, H), 0, 0);
   }
 }
