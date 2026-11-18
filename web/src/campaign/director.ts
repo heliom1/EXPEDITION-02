@@ -63,6 +63,8 @@ export interface CampaignCtx {
 interface Proc { id: string; at: () => Vector3; range: number; dur: number; t: number; label: string; done: () => void }
 
 const STORM: Record<string, number> = { storm_alert: 0.35, secure: 0.55, storm_mode: 0.75, maintain: 1 };
+/** Seconds MEV-1 must stay still at the survey point for the first-deployment scan. */
+const SURVEY_HOLD = 6;
 
 export class CampaignDirector {
   private proc: Proc | null = null;
@@ -155,7 +157,13 @@ export class CampaignDirector {
   }
 
   /** HUD progress bar for a running timed process. */
-  get progress(): { label: string; value: number } | null { return this.proc ? { label: this.proc.label, value: this.proc.t / this.proc.dur } : null; }
+  get progress(): { label: string; value: number } | null {
+    if (this.proc) return { label: this.proc.label, value: this.proc.t / this.proc.dur };
+    if (this.surveyZone) return { label: this.holdTimer > 0 ? 'Survey scan running — hold still…' : 'Survey point reached — stop MEV-1 to start the scan', value: this.holdTimer / SURVEY_HOLD };
+    return null;
+  }
+  /** True while MEV-1 is at the first-deployment survey point (drives the HUD scan bar). */
+  private surveyZone = false;
 
   private start(id: string, at: () => Vector3, dur: number, label: string, done: () => void, range = 4.5): void {
     if (this.proc) return;
@@ -202,7 +210,8 @@ export class CampaignDirector {
     const P = this.pos, p = this.props;
     const add = (id: string, label: string, verb: InteractionVerb, at: Vector3 | (() => Vector3), when: () => boolean, interact: () => void, status?: () => string | null, range = 2.8) => {
       const pos = typeof at === 'function' ? at() : at;
-      const it = { id, label, verb, position: pos, range, enabled: when, interact, status };
+      // Mission steps take priority over generic service points that share their spot (see Interactable.priority).
+      const it = { id, label, verb, position: pos, range, enabled: when, interact, status, priority: 1 };
       if (typeof at === 'function') Object.defineProperty(it, 'position', { get: at });
       this.c.interactions.add(it);
     };
@@ -267,7 +276,7 @@ export class CampaignDirector {
       this.c.inventory.remove('ice_core', 1);
       p.lab.sample.visible = true;
       p.lab.screen.draw(['LAB ANALYSIS', 'SAMPLE: ICE CORE C-09', 'READY'], '#bfe8ff', '#06121a');
-      this.complete('lab_transfer', { grammar: 'push', target: P.chamber.clone().add(new Vector3(0, -0.1, -0.5)), r: 0.6, indoor: true, place: { text: 'ANALYSIS CHAMBER', eyebrow: 'Sample secured' } });
+      this.complete('lab_transfer', { grammar: 'push', target: this.props.lab.worldPoint('chamberCore'), r: 0.6, indoor: true, place: { text: 'ANALYSIS CHAMBER', eyebrow: 'Sample secured' } });
     }, () => 'secure ice sample', 2.4);
     add('c_lab', 'Laboratory analysis terminal', 'Activate', P.lab, is('analyze'), () => {
       p.lab.analyzing = 1;
@@ -275,7 +284,7 @@ export class CampaignDirector {
       this.start('analyze', () => P.lab, 8, 'Analyzing composition, purity, geology…', () => {
         p.lab.analyzing = 0;
         p.lab.screen.draw(['ANALYSIS COMPLETE', 'H₂O ICE  CONFIRMED', 'PURITY  ~92 %', 'DUST BANDS  YES'], '#b8ffb0', '#06121a');
-        this.complete('analyze', { grammar: 'push', target: P.lab.clone().add(new Vector3(0, 0.1, -0.6)), r: 0.7, indoor: true, title: { text: 'WATER ICE CONFIRMED', eyebrow: 'Laboratory analysis' } }, () => this.c.showRecord(RECORDS.lab_analysis));
+        this.complete('analyze', { grammar: 'push', target: this.props.lab.worldPoint('screen'), r: 0.7, indoor: true, title: { text: 'WATER ICE CONFIRMED', eyebrow: 'Laboratory analysis' } }, () => this.c.showRecord(RECORDS.lab_analysis));
       });
     }, () => 'run analysis', 2.4);
     add('c_holo', 'Holographic mapping table', 'Activate', P.holo, is('reconstruct'), () => {
@@ -462,9 +471,10 @@ export class CampaignDirector {
       case 'restore_vehicle': if (this.near(P.garageTerm, 5)) this.approach(id, null); break;
       case 'first_deploy': {
         const v = c.vehicle();
-        if (driving === 'mev' && v && Math.hypot(v.pos.x - P.survey.x, v.pos.z - P.survey.z) < 20 && Math.abs(v.speed) < 0.6) {
+        this.surveyZone = driving === 'mev' && !!v && Math.hypot(v.pos.x - P.survey.x, v.pos.z - P.survey.z) < 25;
+        if (this.surveyZone && v && Math.abs(v.speed) < 1) {
           this.holdTimer += dt;
-          if (this.holdTimer > 8) { this.holdTimer = 0; c.mission.addRecord('survey1'); this.complete(id, { grammar: 'crane', target: v.pos.clone().add(new Vector3(0, 1, 0)), r: 12, h: 26, a0: 1.2 }, () => c.showRecord(RECORDS.survey1)); }
+          if (this.holdTimer > SURVEY_HOLD) { this.holdTimer = 0; this.surveyZone = false; c.mission.addRecord('survey1'); this.complete(id, { grammar: 'crane', target: v.pos.clone().add(new Vector3(0, 1, 0)), r: 12, h: 26, a0: 1.2 }, () => c.showRecord(RECORDS.survey1)); }
         } else this.holdTimer = 0;
         break;
       }

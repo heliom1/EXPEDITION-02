@@ -32,10 +32,38 @@ float vnoise(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f);
   return mix(mix(mix(hash(i),hash(i+vec3(1,0,0)),f.x),mix(hash(i+vec3(0,1,0)),hash(i+vec3(1,1,0)),f.x),f.y),
              mix(mix(hash(i+vec3(0,0,1)),hash(i+vec3(1,0,1)),f.x),mix(hash(i+vec3(0,1,1)),hash(i+vec3(1,1,1)),f.x),f.y),f.z); }
 float fbm(vec3 p){ float a=0.5, s=0.0; for(int i=0;i<5;i++){ s+=a*vnoise(p); p*=2.03; a*=0.5; } return s; }`;
+/**
+ * Procedural craters for close approach (the colour/normal maps are only 4 px/deg and turn to mush near the surface).
+ * Cellular: each cell holds one crater (bowl + raised rim + faint ejecta) with an analytic height gradient, so the
+ * relief lights correctly. Returns gradient in xyz, height in w.
+ */
+const CRATERS = /* glsl */`
+vec3 hash3(vec3 p){ p = vec3(dot(p,vec3(127.1,311.7,74.7)), dot(p,vec3(269.5,183.3,246.1)), dot(p,vec3(113.5,271.9,124.6))); return fract(sin(p)*43758.5453); }
+vec4 craterLayer(vec3 p){
+  vec3 i = floor(p), f = fract(p); vec3 grad = vec3(0.0); float h = 0.0;
+  for (int z=-1; z<=1; z++) for (int y=-1; y<=1; y++) for (int x=-1; x<=1; x++) {
+    vec3 g = vec3(float(x), float(y), float(z)); vec3 o = hash3(i + g);
+    if (o.z > 0.62) continue;                             // not every cell has a crater
+    float r = 0.18 + 0.32*o.x;
+    vec3 v = f - (g + o); float len = length(v) + 1e-5; float d = len / r;
+    if (d > 1.8) continue;
+    float depth = 0.6 + 0.8*o.y;
+    // profile: parabolic bowl inside, sharp rim at d=1, exponential ejecta falloff outside
+    float hb = d < 1.0 ? (d*d - 1.0) : 0.0;
+    float rim = exp(-pow((d - 1.0)*5.0, 2.0));
+    float ej = d > 1.0 ? exp(-(d - 1.0)*3.0)*0.25 : 0.0;
+    float hp = (hb*0.7 + rim*0.45 + ej) * depth;
+    float dh = (d < 1.0 ? 2.0*d*0.7 : -3.0*ej/0.25*0.25) + rim*(-50.0*(d - 1.0))*0.45;
+    h += hp;
+    grad += dh * depth * (v / (len * r));
+  }
+  return vec4(grad, h);
+}`;
 const marsFrag = /* glsl */`
 uniform sampler2D uColor, uNormal; uniform vec3 uSun, uCam; uniform float uGrid, uTime, uDetail, uSelect; uniform vec2 uSite;
 varying vec2 vUv; varying vec3 vN; varying vec3 vT; varying vec3 vWorld; varying vec3 vObj;
 ${NOISE}
+${CRATERS}
 void main(){
   vec3 N0 = normalize(vN), T = normalize(vT - N0*dot(vT,N0)), B = cross(N0, T);
   vec3 nm = texture2D(uNormal, vUv).xyz*2.0-1.0;
@@ -46,13 +74,31 @@ void main(){
   vec3 L = normalize(uSun), V = normalize(uCam - vWorld);
   vec3 alb = texture2D(uColor, vUv).rgb;
   alb *= 0.92 + 0.16*(fbm(vObj*2.5)) ;
-  alb *= mix(1.0, 0.85 + 0.3*fbm(vObj*14.0), uDetail);
+  float craterH = 0.0;
+  if (uDetail > 0.01) {
+    // three crater scales (~56, 19, 6 km cells) fade in with proximity; perturb the normal with their gradient
+    vec4 c1 = craterLayer(vObj*0.6), c2 = craterLayer(vObj*1.8 + 11.0), c3 = craterLayer(vObj*5.4 + 23.0);
+    vec3 gsum = c1.xyz*0.6 + c2.xyz*1.8*0.45 + c3.xyz*5.4*0.22;
+    vec3 gt = gsum - N0*dot(gsum, N0);
+    N = normalize(N - gt * 0.022 * uDetail);
+    craterH = (c1.w + c2.w*0.6 + c3.w*0.35) * uDetail;
+    // albedo: dark basalt plains vs bright dust, wind streaks, darker crater floors and bright rims
+    float basalt = smoothstep(0.42, 0.62, fbm(vObj*0.35 + 3.0));
+    float streak = fbm(vec3(vObj.x*3.0, vObj.y*0.6, vObj.z*3.0) + 9.0);
+    vec3 detailAlb = alb * mix(vec3(1.06, 0.98, 0.92), vec3(0.62, 0.5, 0.44), basalt * 0.7);
+    detailAlb *= 0.86 + 0.28*streak;
+    detailAlb *= clamp(1.0 + craterH*0.22, 0.7, 1.25);
+    detailAlb *= 0.85 + 0.3*fbm(vObj*14.0);
+    alb = mix(alb, detailAlb, uDetail);
+  }
+  // richer rust instead of washed-out beige: slight gamma + red bias
+  alb = pow(alb, vec3(1.18)) * vec3(1.1, 0.93, 0.8);
   float geo = dot(N0, L);
   float lam = max(dot(N, L), 0.0);
   // soft terminator + Minnaert-style limb darkening for a dusty regolith
   float day = smoothstep(-0.08, 0.18, geo);
   float minn = pow(max(dot(N0,V),0.0), 0.25);
-  vec3 col = alb * lam * day * minn * 3.1;
+  vec3 col = alb * lam * day * minn * mix(3.1, 2.7, uDetail);
   col *= mix(vec3(1.0), vec3(1.25,0.72,0.48), smoothstep(0.35, 0.0, geo) * day); // reddened light at low sun
   col += alb * 0.012;                                                          // faint night-side fill
   float rim = pow(1.0 - max(dot(N0, V), 0.0), 3.0);
@@ -104,11 +150,23 @@ void main(){
 }`;
 const skyVert = /* glsl */`
 varying vec3 vDir; varying vec2 vUv;
-void main(){ vDir = position; vUv = uv; vec4 p = projectionMatrix * modelViewMatrix * vec4(position,1.0); gl_Position = p.xyww; }`;
+void main(){ vDir = position; vUv = uv; vec4 p = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+#ifdef USE_REVERSED_DEPTH_BUFFER
+  gl_Position = vec4(p.xy, 0.0, p.w); // far plane (reversed-Z: depth 0 = far)
+#else
+  gl_Position = p.xyww;
+#endif
+}`;
 const starVert = /* glsl */`
 attribute float aSize; attribute vec3 aColor; attribute float aPhase; uniform float uTime; varying vec3 vC; varying float vA;
 void main(){ vC = aColor; vA = 0.65 + 0.35*sin(uTime*(1.0+aPhase*3.0) + aPhase*40.0);
-  vec4 mv = modelViewMatrix*vec4(position,1.0); gl_PointSize = aSize; gl_Position = projectionMatrix*mv; gl_Position.z = gl_Position.w*0.9999; }`;
+  vec4 mv = modelViewMatrix*vec4(position,1.0); gl_PointSize = aSize; gl_Position = projectionMatrix*mv;
+#ifdef USE_REVERSED_DEPTH_BUFFER
+  gl_Position.z = gl_Position.w*0.0001;
+#else
+  gl_Position.z = gl_Position.w*0.9999;
+#endif
+}`;
 const starFrag = /* glsl */`
 varying vec3 vC; varying float vA;
 void main(){ vec2 p = gl_PointCoord*2.0-1.0; float r = dot(p,p); if (r>1.0) discard; float a = exp(-r*4.0)*vA; gl_FragColor = vec4(vC*a, a); }`;
@@ -165,7 +223,7 @@ export class SpaceScene {
     this.scene.add(this.marsSpin);
     this.atmoMat = new ShaderMaterial({
       vertexShader: atmoVert, fragmentShader: atmoFrag, transparent: true, depthWrite: false, blending: AdditiveBlending, side: BackSide,
-      uniforms: { uSun: { value: this.sunDir }, uCam: { value: new Vector3() }, uCenter: { value: new Vector3() }, uStrength: { value: 0.55 } },
+      uniforms: { uSun: { value: this.sunDir }, uCam: { value: new Vector3() }, uCenter: { value: new Vector3() }, uStrength: { value: 0.8 } },
     });
     this.scene.add(new Mesh(new SphereGeometry(MARS_R * 1.02, 96, 64), this.atmoMat));
 
@@ -265,7 +323,7 @@ export class SpaceScene {
     const dCol: number[] = []; const dSize: number[] = []; const dPh: number[] = [];
     for (let i = 0; i < 400; i++) { dCol.push(0.35, 0.3, 0.27); dSize.push(1.5); dPh.push(Math.random()); }
     dg.setAttribute('aColor', new Float32BufferAttribute(dCol, 3)); dg.setAttribute('aSize', new Float32BufferAttribute(dSize, 1)); dg.setAttribute('aPhase', new Float32BufferAttribute(dPh, 1));
-    this.dust = new Points(dg, new ShaderMaterial({ vertexShader: starVert.replace('gl_Position.z = gl_Position.w*0.9999;', ''), fragmentShader: starFrag, transparent: true, depthWrite: false, blending: AdditiveBlending, uniforms: { uTime: { value: 0 } } }));
+    this.dust = new Points(dg, new ShaderMaterial({ vertexShader: starVert.replace(/#ifdef USE_REVERSED_DEPTH_BUFFER[\s\S]*?#endif/, ''), fragmentShader: starFrag, transparent: true, depthWrite: false, blending: AdditiveBlending, uniforms: { uTime: { value: 0 } } }));
     this.dust.frustumCulled = false;
     this.scene.add(this.dust);
 

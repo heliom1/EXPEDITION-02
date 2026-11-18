@@ -39,8 +39,11 @@ export function createSky(sunDir: Vector3): Mesh {
         col += vec3(1.0, 0.82, 0.62) * pow(c, 8.0) * 0.35;      // broad halo
         col += vec3(1.0, 0.9, 0.78) * pow(c, 90.0) * 0.6;        // inner glow
         col = mix(col, vec3(0.78, 0.84, 0.92), pow(c, 400.0) * 0.5); // bluish aureole
-        col += vec3(1.0) * smoothstep(0.99955, 0.99975, c) * 3.0; // sun disc
-        col = mix(col, vec3(0.78, 0.55, 0.38), uDust);
+        col += vec3(1.0) * smoothstep(0.99955, 0.99975, c) * 3.0 * (1.0 - uDust * 0.85); // sun disc
+        // dust storm: brown-orange murk, darker overhead, the sun only a dim smudge
+        vec3 storm = mix(vec3(0.5, 0.31, 0.19), vec3(0.27, 0.16, 0.1), pow(up, 0.5));
+        storm += vec3(0.9, 0.6, 0.35) * pow(c, 30.0) * 0.35;
+        col = mix(col, storm, uDust);
         gl_FragColor = vec4(col, 1.0);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>

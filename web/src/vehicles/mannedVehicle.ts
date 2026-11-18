@@ -14,12 +14,13 @@ import type { RoverGround, RoverObstacles } from './drivableRover';
  * Driving model (kinematic, same ground query as the player): bicycle-model steering (Ackermann-like yaw rate),
  * throttle/brake/drag, Mars-gravity slope term, 4 ground probes → height/pitch/roll, per-wheel suspension travel,
  * collisions against structures and colliders, battery drain + charging in the hangar bay. Gameplay speeds
- * (top 40 km/h); NASA's LTV concepts top out around 15 km/h.
+ * (top 60 km/h); NASA's LTV concepts top out around 15 km/h.
  */
 export interface VehicleInput { throttle: number; steer: number; brake: boolean }
 
 export const MEV_CFG = {
-  wheelbase: 2.95, maxSpeed: 11, reverseSpeed: 3.5, accel: 2.6, brake: 7, drag: 0.35,
+  // Top speed 60 km/h, reached in ~4 s (drag used to cap it near 27 km/h, which made long drives a crawl).
+  wheelbase: 2.95, maxSpeed: 16.7, reverseSpeed: 5, accel: 4.6, brake: 9, drag: 0.12,
   maxSteer: 0.55, steerRate: 2.2, maxSlopeDeg: 30, drainFull: 0.12, drainIdle: 0.006, chargeRate: 1.6, suspension: 0.18,
 };
 
@@ -170,24 +171,48 @@ export class MannedVehicle {
     else if (thr > 0) this.speed += (this.speed < 0 ? C.brake : C.accel) * thr * dt;
     else if (thr < 0) this.speed += (this.speed > 0 ? -C.brake : -C.accel * 0.7) * -thr * dt;
     this.speed -= this.speed * C.drag * dt;
-    if (!thr && Math.abs(this.speed) < 0.05) this.speed = 0;
-    this.speed -= GRAVITY * Math.sin(this.pitch) * dt; // Mars gravity along the slope
+    // Parking brake: with no throttle, a slow vehicle stays put on gentle slopes (< 15°) instead of creeping downhill.
+    if (!thr && Math.abs(this.speed) < 0.35 && Math.abs(this.pitch) < 0.26) this.speed = 0;
+    else this.speed -= GRAVITY * Math.sin(this.pitch) * dt; // Mars gravity along the slope
     this.speed = Math.max(-C.reverseSpeed, Math.min(C.maxSpeed, this.speed));
-    const steerMax = C.maxSteer * (1 - 0.55 * Math.min(1, Math.abs(this.speed) / C.maxSpeed));
+    const steerMax = C.maxSteer * (1 - 0.6 * Math.min(1, Math.abs(this.speed) / C.maxSpeed));
     this.steer += (input.steer * steerMax - this.steer) * Math.min(1, dt * C.steerRate);
+    const prevYaw = this.yaw;
     this.yaw -= (this.speed / C.wheelbase) * Math.tan(this.steer) * dt;
-    const step = this.forward.multiplyScalar(this.speed * dt);
-    const nx = this.pos.x + step.x, nz = this.pos.z + step.z;
     let hit = false;
-    const half = this.length * 0.32, r = Math.max(1.05, this.width * 0.5);
-    const f = this.forward;
-    const probe = (x: number, z: number) => obstacles.blocked(x + f.x * half * Math.sign(this.speed || 1), z + f.z * half * Math.sign(this.speed || 1), this.pos.y, r);
-    const slopeOk = () => {
-      const h0 = ground.height(this.pos.x, this.pos.z, this.pos.y + 2), h1 = ground.height(nx, nz, this.pos.y + 2);
-      return Math.atan2(h1 - h0, Math.hypot(step.x, step.z) || 1e-6) < (C.maxSlopeDeg * Math.PI) / 180 || this.speed < 0;
+    // Collision footprint: a body-wide circle whose leading edge sits exactly at the bumper (front when driving forward,
+    // rear when reversing). It used to sit 1.8 m ahead and reach 1.3 m past the bumper, so any turn inside the 9 m
+    // hangar "hit" the wall and the vehicle could not get out.
+    const r = Math.max(1.05, this.width * 0.5), half = Math.max(0, this.length * 0.5 - r);
+    const dir = Math.sign(this.speed || 1);
+    const blockedAt = (x: number, z: number, yaw: number, d: number) =>
+      obstacles.blocked(x + Math.sin(yaw) * half * d, z + Math.cos(yaw) * half * d, this.pos.y, r);
+    // Already pinned front and back (e.g. a save from before this fix): let it drive free instead of staying stuck.
+    const pinned = blockedAt(this.pos.x, this.pos.z, prevYaw, 1) && blockedAt(this.pos.x, this.pos.z, prevYaw, -1);
+    const slopeOk = (x: number, z: number) => {
+      if (this.speed < 0) return true;
+      const h0 = ground.height(this.pos.x, this.pos.z, this.pos.y + 2), h1 = ground.height(x, z, this.pos.y + 2);
+      return Math.atan2(h1 - h0, Math.hypot(x - this.pos.x, z - this.pos.z) || 1e-6) < (C.maxSlopeDeg * Math.PI) / 180;
     };
-    if (Math.abs(this.speed) > 1e-3 && !probe(nx, nz) && slopeOk()) { this.pos.x = nx; this.pos.z = nz; this.odometer += Math.abs(this.speed * dt); }
-    else if (Math.abs(this.speed) > 0.3) { hit = Math.abs(this.speed) > 2; if (hit) this.condition = Math.max(0, this.condition - Math.abs(this.speed) * 0.8); this.speed *= -0.25; }
+    let moved = false;
+    if (Math.abs(this.speed) > 1e-3) {
+      const sx = Math.sin(this.yaw) * this.speed * dt, sz = Math.cos(this.yaw) * this.speed * dt;
+      // Full move first, then slide along whatever is in the way (one axis at a time), like the player controller.
+      const tries: Array<[number, number, number]> = [[sx, sz, this.yaw], [sx, 0, this.yaw], [0, sz, this.yaw], [sx, sz, prevYaw]];
+      for (const [dx, dz, yaw] of tries) {
+        const x = this.pos.x + dx, z = this.pos.z + dz;
+        if ((dx || dz) && (pinned || !blockedAt(x, z, yaw, dir)) && slopeOk(x, z)) {
+          this.pos.x = x; this.pos.z = z; this.yaw = yaw; this.odometer += Math.hypot(dx, dz); moved = true;
+          if (dx !== sx || dz !== sz) this.speed *= 1 - Math.min(0.9, dt * 2.5); // scraping along a wall slows you down
+          break;
+        }
+      }
+    }
+    if (!moved) {
+      // Blocked: do not turn into the obstacle either (turning in place used to wedge the vehicle in the hangar).
+      if (!pinned && blockedAt(this.pos.x, this.pos.z, this.yaw, dir)) this.yaw = prevYaw;
+      if (Math.abs(this.speed) > 0.3) { hit = Math.abs(this.speed) > 2; if (hit) this.condition = Math.max(0, this.condition - Math.abs(this.speed) * 0.8); this.speed *= -0.25; }
+    }
     const drain = (Math.abs(thr) * C.drainFull + C.drainIdle + (this.headlights ? 0.004 : 0)) * dt;
     this.charging = !!charger && charger(this.pos) && Math.abs(this.speed) < 0.2;
     if (this.powered) this.battery = Math.max(0, Math.min(100, this.battery - drain + (this.charging ? C.chargeRate * dt : 0)));

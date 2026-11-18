@@ -21,7 +21,7 @@ export interface RoverObstacles { blocked(x: number, z: number, y: number, radiu
 export interface RoverInput { throttle: number; steer: number; brake: boolean }
 
 export const ROVER_CFG = {
-  maxSpeed: 6.5, reverseSpeed: 2.5, accel: 2.2, brake: 6, drag: 0.6,
+  maxSpeed: 9, reverseSpeed: 3.5, accel: 3, brake: 7, drag: 0.6,
   turnRate: 0.7, pivotTurnRate: 0.45, maxSlopeDeg: 28,
   /** Battery use per second at full throttle (% of capacity); idle draw; charge rate on the outpost pad. */
   drainFull: 0.22, drainIdle: 0.01, chargeRate: 1.2,

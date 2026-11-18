@@ -172,6 +172,8 @@ export class LabStationProp extends Prop {
     head.add(box(0.66, 0.44, 0.04, M.dark, 0, 0, -0.03)); this.screen.mesh.position.z = 0.0; head.add(this.screen.mesh);
     this.group.add(head);
     this.points.chamber = new Vector3(-0.35, 1.15, 0.6);
+    this.points.screen = new Vector3(0.4, 1.25, -0.08); // analysis display (cinematic subject)
+    this.points.chamberCore = new Vector3(-0.35, 1.15, 0); // inside the glass chamber (cinematic subject)
     this.points.use = new Vector3(0.4, 1.2, 0.6);
   }
   update(_dt: number, t: number): void {

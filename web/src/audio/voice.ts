@@ -68,9 +68,17 @@ export class VoiceDirector {
     this.pump();
   }
 
+  /**
+   * Lines that no longer fit the moment (e.g. an objective's arrival line after that objective is already done) are
+   * dropped when their turn comes, instead of playing minutes later over an unrelated scene.
+   */
+  stale: ((line: VoiceLine) => boolean) | null = null;
+
   private pump(): void {
     if (this.busy || !this.queue.length) return;
     if (!this.audio.started) { setTimeout(() => this.pump(), 300); return; } // wait for the first user gesture
+    while (this.queue.length && this.stale?.(this.queue[0])) this.queue.shift();
+    if (!this.queue.length) return;
     const line = this.queue.shift()!;
     this.busy = true;
     this.current = line;

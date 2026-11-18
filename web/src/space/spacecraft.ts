@@ -1,7 +1,7 @@
 import {
   AdditiveBlending, BoxGeometry, BufferGeometry, Color, ConeGeometry, CylinderGeometry, DoubleSide, Float32BufferAttribute, Group,
-  LatheGeometry, LineBasicMaterial, LineSegments, Mesh, MeshStandardMaterial, PointLight, ShaderMaterial, SphereGeometry,
-  SpotLight, TorusGeometry, Vector2, Vector3, type Object3D, type Texture,
+  LatheGeometry, LineBasicMaterial, LineSegments, Mesh, MeshStandardMaterial, PointLight, Points, ShaderMaterial, SphereGeometry,
+  SpotLight, Sprite, SpriteMaterial, CanvasTexture, SRGBColorSpace, TorusGeometry, Vector2, Vector3, type Object3D, type Texture,
 } from 'three';
 import { chuteTexture, foilTexture, hullTexture, noiseTexture, shieldTexture, solarTexture } from './textures';
 
@@ -31,20 +31,64 @@ void main(){
   vec3 c = mix(uCore, uEdge, smoothstep(0.0, 0.7, along));
   gl_FragColor = vec4(c * a * 6.0, a);
 }`;
+/** Plasma shells: like plumeVert, plus a view-angle term so the shock layer glows at its edges and stays see-through
+ * head-on (an opaque white ball filled the screen in close shots). */
+const plasmaVert = /* glsl */`
+varying vec2 vUv; varying float vFres;
+void main(){
+  vUv = uv;
+  vec4 mv = modelViewMatrix * vec4(position, 1.0);
+  vFres = 1.0 - abs(dot(normalize(normalMatrix * normal), normalize(-mv.xyz)));
+  gl_Position = projectionMatrix * mv;
+}`;
 const plasmaFrag = /* glsl */`
-uniform float uTime, uPower; uniform sampler2D uNoise; varying vec2 vUv;
+uniform float uTime, uPower; uniform sampler2D uNoise; varying vec2 vUv; varying float vFres;
 void main(){
   float along = vUv.y;
   float n = texture2D(uNoise, vec2(vUv.x*3.0 + uTime*0.4, along*2.0 - uTime*2.5)).r;
-  float a = pow(1.0-along, 1.2) * (0.35 + 0.65*n) * uPower;
-  vec3 c = mix(vec3(1.0,0.92,0.75), vec3(1.0,0.32,0.06), smoothstep(0.0,0.6,along));
+  float a = pow(1.0-along, 1.2) * (0.35 + 0.65*n) * uPower * mix(0.4, 1.0, pow(vFres, 1.6));
+  vec3 c = mix(vec3(1.0,0.78,0.5), vec3(1.0,0.3,0.05), smoothstep(0.0,0.5,along));
   c = mix(c, vec3(0.55,0.25,1.0), smoothstep(0.75,1.0,along)*0.4);
-  gl_FragColor = vec4(c * a * 2.5, a);
+  a = min(a, 0.9);
+  gl_FragColor = vec4(c * a * 2.2, a);
 }`;
 
-function additive(frag: string, noise: Texture, extra: Record<string, { value: unknown }> = {}): ShaderMaterial {
+/** Long tapered entry trail: hot white near the shield, through orange to a faint violet tail; noise-streaked. */
+const trailFrag = /* glsl */`
+uniform float uTime, uPower; uniform sampler2D uNoise; varying vec2 vUv; varying float vFres;
+void main(){
+  float along = vUv.y;                                   // 0 at the shield, 1 at the tail
+  float n = texture2D(uNoise, vec2(vUv.x*2.0 + uTime*0.2, along*1.2 - uTime*1.6)).r;
+  float n2 = texture2D(uNoise, vec2(vUv.x*5.0, along*4.0 - uTime*4.0)).r;
+  float edge = sin(vUv.x*3.14159*2.0)*0.5 + 0.5;
+  float a = pow(1.0 - along, 1.8) * (0.25 + 0.75*n) * (0.6 + 0.4*n2) * uPower * mix(0.5, 1.0, pow(vFres, 1.4));
+  vec3 c = mix(vec3(1.0, 0.72, 0.42), vec3(1.0, 0.33, 0.07), smoothstep(0.0, 0.3, along));
+  c = mix(c, vec3(0.6, 0.25, 0.9), smoothstep(0.55, 1.0, along) * 0.5);
+  a = min(a, 0.85);
+  gl_FragColor = vec4(c * a * 2.0, a);
+}`;
+/** Sparks shed from the heat-shield rim, streaming back along the trail (fully procedural, time-driven). */
+const sparkVert = /* glsl */`
+attribute vec3 aSeed; uniform float uTime, uPower; varying float vA;
+void main(){
+  float life = fract(uTime * (0.55 + aSeed.x*0.9) + aSeed.y);
+  float ang = aSeed.z * 6.2831853;
+  float r = 3.3 + life * (2.0 + aSeed.x*6.0);
+  vec3 p = vec3(cos(ang)*r, 0.3 + life * (18.0 + aSeed.y*55.0), sin(ang)*r);  // +Y = trailing (backshell side)
+  vA = (1.0 - life) * uPower;
+  vec4 mv = modelViewMatrix * vec4(p, 1.0);
+  // size in model metres → pixels (the craft is scaled down in the orbital scene, so include the model scale)
+  float worldScale = length(modelViewMatrix[0].xyz);
+  gl_PointSize = clamp((0.4 + aSeed.x*0.8) * (1.0 - life*0.6) * worldScale * 900.0 / max(0.01, -mv.z), 1.5, 28.0);
+  gl_Position = projectionMatrix * mv;
+}`;
+const sparkFrag = /* glsl */`
+varying float vA;
+void main(){ vec2 p = gl_PointCoord*2.0-1.0; float r = dot(p,p); if (r > 1.0) discard; float a = exp(-r*3.0)*vA; gl_FragColor = vec4(vec3(1.0, 0.62, 0.28)*a*2.5, a); }`;
+
+function additive(frag: string, noise: Texture, extra: Record<string, { value: unknown }> = {}, vert = plumeVert): ShaderMaterial {
   return new ShaderMaterial({
-    vertexShader: plumeVert, fragmentShader: frag, transparent: true, depthWrite: false, blending: AdditiveBlending, side: DoubleSide,
+    vertexShader: vert, fragmentShader: frag, transparent: true, depthWrite: false, blending: AdditiveBlending, side: DoubleSide,
     uniforms: { uTime: { value: 0 }, uPower: { value: 0 }, uNoise: { value: noise }, uCore: { value: new Color(0xdfe8ff) }, uEdge: { value: new Color(0xff8a3a) }, ...extra },
   });
 }
@@ -65,6 +109,11 @@ export class Spacecraft {
   private readonly mainPlume: Mesh;
   private readonly plasma: Mesh;
   private readonly plasmaWake: Mesh;
+  private readonly trail: Mesh;
+  private readonly sparks: Points;
+  private readonly shieldMat: MeshStandardMaterial;
+  private readonly fireLight: PointLight | null = null;
+  private readonly fireball: Sprite;
   private readonly engineLight: PointLight;
   private readonly descentLight: PointLight;
   readonly landingLights: SpotLight[] = [];
@@ -95,7 +144,8 @@ export class Spacecraft {
     const metal = new MeshStandardMaterial({ color: 0xb9bcc2, roughness: 0.35, metalness: 0.85 });
     const foil = new MeshStandardMaterial({ map: foilTexture(), roughness: 0.28, metalness: 0.9 });
     const solar = new MeshStandardMaterial({ map: solarTexture(), roughness: 0.3, metalness: 0.4, side: DoubleSide });
-    const shield = new MeshStandardMaterial({ map: shieldTexture(), roughness: 0.95, metalness: 0 });
+    const shield = new MeshStandardMaterial({ map: shieldTexture(), roughness: 0.95, metalness: 0, emissive: new Color(0xff5a1a), emissiveIntensity: 0 });
+    this.shieldMat = shield;
     const radiator = new MeshStandardMaterial({ color: 0xf2f2ee, roughness: 0.7, side: DoubleSide });
     const bell = new MeshStandardMaterial({ color: 0x2b2522, roughness: 0.45, metalness: 0.75, side: DoubleSide });
     this.windowMat = new MeshStandardMaterial({ color: 0x0b1118, roughness: 0.05, metalness: 0.9, emissive: new Color(0xffc89a), emissiveIntensity: 0.15 });
@@ -181,10 +231,33 @@ export class Spacecraft {
     this.aeroshell.add(this.backshell);
     // entry plasma: a cap over the shield + wake behind it (in −Y→+Y, i.e. trailing above the backshell when nose-first)
     const cap = lathe([[0.001, -1.35], [0.9, -1.25], [1.8, -0.85], [3.75, 0.15], [4.0, 0.5]], 48);
-    this.plasma = mk(cap, additive(plasmaFrag, noise), this.aeroshell);
+    this.plasma = mk(cap, additive(plasmaFrag, noise, {}, plasmaVert), this.aeroshell);
     const wakeGeo = new CylinderGeometry(4.6, 3.6, 26, 32, 1, true).translate(0, 13.5, 0);
-    this.plasmaWake = mk(wakeGeo, additive(plasmaFrag, noise), this.aeroshell);
+    this.plasmaWake = mk(wakeGeo, additive(plasmaFrag, noise, {}, plasmaVert), this.aeroshell);
     this.plasma.renderOrder = this.plasmaWake.renderOrder = 6;
+    // long fiery trail + shed sparks (entry); an orange fire light so the hull is lit by its own plasma
+    this.trail = mk(new CylinderGeometry(3.4, 0.4, 230, 32, 1, true).translate(0, 116, 0), additive(trailFrag, noise, {}, plasmaVert), this.aeroshell);
+    this.trail.renderOrder = 6;
+    const N = 260, seeds = new Float32Array(N * 3);
+    for (let i = 0; i < N * 3; i++) seeds[i] = Math.random();
+    const sg = new BufferGeometry();
+    sg.setAttribute('position', new Float32BufferAttribute(new Float32Array(N * 3), 3));
+    sg.setAttribute('aSeed', new Float32BufferAttribute(seeds, 3));
+    this.sparks = new Points(sg, new ShaderMaterial({ vertexShader: sparkVert, fragmentShader: sparkFrag, transparent: true, depthWrite: false, blending: AdditiveBlending, uniforms: { uTime: { value: 0 }, uPower: { value: 0 } } }));
+    this.sparks.frustumCulled = false;
+    // soft fireball halo around the shock layer (reads as heat from any angle, and from far away in wide shots)
+    const fc = document.createElement('canvas'); fc.width = fc.height = 128;
+    const fg = fc.getContext('2d')!, grd = fg.createRadialGradient(64, 64, 0, 64, 64, 64);
+    grd.addColorStop(0, 'rgba(255,220,170,1)'); grd.addColorStop(0.25, 'rgba(255,150,60,0.75)'); grd.addColorStop(0.6, 'rgba(255,80,20,0.22)'); grd.addColorStop(1, 'rgba(255,60,10,0)');
+    fg.fillStyle = grd; fg.fillRect(0, 0, 128, 128);
+    const ft = new CanvasTexture(fc); ft.colorSpace = SRGBColorSpace;
+    this.fireball = new Sprite(new SpriteMaterial({ map: ft, blending: AdditiveBlending, depthWrite: false, transparent: true }));
+    this.fireball.position.set(0, -1.2, 0);
+    this.fireball.renderOrder = 7;
+    this.aeroshell.add(this.fireball);
+    this.sparks.renderOrder = 7;
+    this.aeroshell.add(this.sparks);
+    if (lights === 'full') { this.fireLight = new PointLight(0xff7a30, 0, 30, 2); this.fireLight.position.set(0, -4, 0); this.aeroshell.add(this.fireLight); }
 
     // ---- transit stage (above the backshell, engine pointing +Y) ----
     mk(new CylinderGeometry(1.9, 1.9, 0.6, 40), hullDark, this.transit, 0, 9.2, 0);
@@ -287,6 +360,19 @@ export class Spacecraft {
       pm.visible = this.heat > 0.01 && this.aeroshell.visible;
     }
     this.plasmaWake.scale.set(1, 0.4 + this.heat * 0.9, 1);
+    const tm = this.trail.material as ShaderMaterial;
+    tm.uniforms.uTime.value = this.t; tm.uniforms.uPower.value = this.heat * flick;
+    this.trail.visible = this.heat > 0.01 && this.aeroshell.visible;
+    this.trail.scale.set(1, 0.35 + this.heat * 0.65, 1);
+    const sm = this.sparks.material as ShaderMaterial;
+    sm.uniforms.uTime.value = this.t; sm.uniforms.uPower.value = Math.max(0, this.heat - 0.15) * 1.2;
+    this.sparks.visible = this.heat > 0.15 && this.aeroshell.visible;
+    this.shieldMat.emissiveIntensity = this.heat * this.heat * 1.4 * flick;
+    // the craft is scaled to 4% in the orbital scene, so the light sits ~0.15 units from the hull: keep it small
+    if (this.fireLight) this.fireLight.intensity = this.heat * 0.35 * flick;
+    this.fireball.visible = this.heat > 0.02 && this.aeroshell.visible;
+    this.fireball.scale.setScalar(6 + this.heat * 16 * flick);
+    (this.fireball.material as SpriteMaterial).opacity = Math.min(1, this.heat * 1.1) * 0.85;
     // legs: stowed (folded up against the cabin) → deployed
     const d = this.legDeploy * this.legDeploy * (3 - 2 * this.legDeploy);
     for (const l of this.legs) l.rotation.x = (1 - d) * -1.15;

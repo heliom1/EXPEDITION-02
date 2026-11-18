@@ -44,7 +44,14 @@ export interface CineSpec {
   cleanup?: () => void;
 }
 
-export interface CineEnv { eye(): Pose; fov: number; groundY(x: number, z: number, yHint?: number): number }
+export interface CineEnv {
+  eye(): Pose; fov: number; groundY(x: number, z: number, yHint?: number): number;
+  /**
+   * Returns `to`, pulled back toward `from` so it stays in front of any wall/prop on the way (from = a point known to be
+   * in open space, the player's eye). Keeps formula-placed cameras out of geometry.
+   */
+  clampCamera?(from: Vector3, to: Vector3, subject?: Vector3): Vector3;
+}
 
 const D = durations as Record<string, number>;
 const LINES = (script as { lines: Array<{ id: string; trigger: string }> }).lines;
@@ -75,7 +82,8 @@ export function objectiveCine(env: CineEnv, s: CineSpec): Cutscene {
       break;
     }
     case 'push': {
-      const near = E.pos.clone().lerp(T, Math.min(0.55, 1 - (s.r ?? 1.1) / Math.max(1.5, E.pos.distanceTo(T))));
+      // Never closer than 1.6 m: tighter push-ins filled the frame with a flat console face.
+      const near = E.pos.clone().lerp(T, Math.min(0.55, 1 - Math.max(1.6, s.r ?? 1.1) / Math.max(1.5, E.pos.distanceTo(T))));
       const side = new Vector3(-(T.z - E.pos.z), 0, T.x - E.pos.x).normalize().multiplyScalar(s.indoor ? 0.25 : 0.8);
       shots = [
         { duration: body, ease: 'inOut', lamp: s.lamp, path: [E, { pos: near.clone().add(side), look: T, fov }, { pos: near.clone().add(side.multiplyScalar(-0.6)), look: T, fov: fov - 6 }] },
@@ -125,6 +133,21 @@ export function objectiveCine(env: CineEnv, s: CineSpec): Cutscene {
       const ahead = clear(E.pos.clone().addScaledVector(fwd, 1.5).add(new Vector3(0, (s.h ?? 1.2) * 0.6, 0)));
       shots = [{ duration: body, ease: 'inOut', lamp: s.lamp, path: [{ pos: behind, look: T, fov }, { pos: ahead, look: T, fov: fov - 4 }] }, { duration: ret, lamp: s.lamp, path: [{ pos: ahead, look: T, fov: fov - 4 }, E] }];
       break;
+    }
+  }
+  // Keep every authored camera position in open space: orbits around a vehicle in the hangar or push-ins to a console
+  // used to end up behind walls or inside props (grey/black frames).
+  // Only for subjects near the player (interiors, a vehicle in its hangar). Wide shots of distant sites are authored in
+  // open terrain, and a ray from the player (e.g. inside the dome) would wrongly stop them at the nearest wall.
+  if (env.clampCamera && E.pos.distanceTo(T) < 15) {
+    // Checked from the player's eye (always open space). Shots that circle a subject ignore hits on the subject itself,
+    // so an orbit can pass round the far side of a vehicle but still stops at the hangar wall.
+    const subject = s.grammar === 'push' || s.grammar === 'glance' ? undefined : T;
+    const done = new Set<Pose>([E]);
+    for (const shot of shots) for (const p of shot.path) {
+      if (done.has(p)) continue;
+      done.add(p);
+      p.pos = env.clampCamera(E.pos, p.pos, subject);
     }
   }
   const captions: Caption[] = [];

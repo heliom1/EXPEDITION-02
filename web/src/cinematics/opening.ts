@@ -137,7 +137,7 @@ export function spaceOpening(space: SpaceScene, fx: OpeningFx): Cutscene {
       }
       if (t >= T4) {
         const u = t - T4;
-        craft.heat = ss(0.5, 4.5, u) * (0.75 + 0.25 * Math.sin(u * 9) * Math.sin(u * 5.3));
+        craft.heat = ss(0.3, 3.2, u) * (0.82 + 0.18 * Math.sin(u * 9) * Math.sin(u * 5.3));
         fx.flash('#ff7a2e', ss(L4 - 4.5, L4 - 0.4, u) * 0.85 + craft.heat * 0.08);
         fx.rumble(0.25 + craft.heat * 0.75);
       } else fx.rumble(craft.mainThrottle * 0.5);
@@ -167,11 +167,28 @@ export function spaceOpening(space: SpaceScene, fx: OpeningFx): Cutscene {
         const track: Pose = { pos: c.clone().addScaledVector(toMars, -4.5).addScaledVector(side, 2.6).addScaledVector(fwd, -1.8), look: c.clone().addScaledVector(fwd, 1.2).addScaledVector(toMars, 2.0), fov: 44 };
         return lerpPose(low, track, ss(5.5, 8.0, u));
       }
-      const u = t - T4;
-      const behind: Pose = { pos: c.clone().addScaledVector(fwd, -2.6).addScaledVector(toMars, -0.55).addScaledVector(side, 0.9), look: c.clone().addScaledVector(fwd, 4).addScaledVector(toMars, 0.4), fov: 48 };
-      const flank: Pose = { pos: c.clone().addScaledVector(side, 2.2).addScaledVector(fwd, 1.2).addScaledVector(toMars, -0.5), look: c.clone().addScaledVector(fwd, -1.0).addScaledVector(toMars, 1.4), fov: 54 };
-      const p = lerpPose(behind, flank, ss(L4 * 0.45, L4 * 0.6, u));
-      p.pos.add(shake(u, 0.01 + craft.heat * 0.035));
+      // Atmospheric entry in three beats (cuts, not blends):
+      //   1. over-the-shoulder skim toward the curved horizon as the plasma ignites
+      //   2. hero shot from just ahead, looking back into the blazing heat shield with the planet filling the frame
+      //   3. wide "meteor" shot: a fireball and its long trail streaking across the surface, into the whiteout
+      const u = t - T4, k = u / L4;
+      let p: Pose;
+      if (k < 0.34) {
+        const a = k / 0.34;
+        // (on this orbit `side` is radial; lateral offsets use `up`, the orbit normal)
+        p = { pos: c.clone().addScaledVector(fwd, -1.3 + a * 0.4).addScaledVector(toMars, -0.35).addScaledVector(up, 1.0 - a * 0.25),
+          look: c.clone().addScaledVector(fwd, 0.5), fov: 46 - a * 4 };
+      } else if (k < 0.66) {
+        const a = (k - 0.34) / 0.32;
+        p = { pos: c.clone().addScaledVector(fwd, 0.55 - a * 0.15).addScaledVector(toMars, -0.42).addScaledVector(up, 0.75 - a * 0.3),
+          look: c.clone().addScaledVector(fwd, -0.12).addScaledVector(toMars, 0.08), fov: 50 - a * 6 };
+      } else {
+        const a = (k - 0.66) / 0.34;
+        // above and ahead, looking down past the fireball so the surface is the backdrop for the trail
+        p = { pos: c.clone().addScaledVector(toMars, -4.5).addScaledVector(up, 3.2 - a).addScaledVector(fwd, 4.5 - a * 2.5),
+          look: c.clone().addScaledVector(fwd, -1.8 + a * 1.4).addScaledVector(toMars, 0.4), fov: 34 - a * 4 };
+      }
+      p.pos.add(shake(u, (k < 0.66 ? 0.006 : 0.03) + craft.heat * (k < 0.66 ? 0.03 : 0.08)));
       return p;
     },
     onSkip: () => fx.interference(false),

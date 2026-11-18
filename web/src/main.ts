@@ -1,5 +1,5 @@
 ﻿import './ui/styles.css';
-import { AnimationMixer, Box3, Color, PMREMGenerator, Group, MeshStandardMaterial, PerspectiveCamera, PointLight, SpotLight, Vector3, WebGLRenderTarget, type Object3D } from 'three';
+import { AnimationMixer, Box3, Color, PMREMGenerator, Group, MeshStandardMaterial, PerspectiveCamera, PointLight, SpotLight, Vector3, WebGLRenderTarget, DepthTexture, FloatType, HalfFloatType, Raycaster, type Camera, type Mesh, type ShaderMaterial, type Object3D, type Scene } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
@@ -12,6 +12,7 @@ import { createRenderContext, FOG_DENSITY, type RenderContext } from './renderin
 import { loadLayerTextures } from './rendering/textures';
 import { createSky } from './rendering/sky';
 import { DustMotes } from './rendering/dust';
+import { StormVeil } from './rendering/stormVeil';
 import { WorldData } from './world/worldData';
 import { Terrain, QUALITY_HIGH, QUALITY_LOW } from './world/terrain';
 import { createBackdrop } from './world/backdrop';
@@ -94,6 +95,27 @@ async function boot(): Promise<void> {
     return;
   }
   const { renderer, scene, camera } = ctx;
+  /**
+   * Compiles every material under `root` for the lights of `target` without blocking frames (parallel compile), so a
+   * shader is never first compiled mid-game — that stalled single frames for 0.2–0.7 s (e.g. turning around at the
+   * outpost or switching to third person). Hidden objects are included. Call it after the scene's lights are final.
+   */
+  const warmShaders = (root: Object3D, cam: Camera = camera, target: Object3D = scene): Promise<unknown> =>
+    renderer.compileAsync(root, cam, target as Scene).catch((e) => console.warn('Shader warm-up failed:', e));
+  /**
+   * Transmissive materials (cave ice, the astronaut's helmet glass in third person) make three.js redraw the opaque
+   * scene into an off-screen linear buffer, which uses its own shader variants (no tone mapping, linear output).
+   * This compiles those variants in the background too.
+   */
+  let linearTarget: WebGLRenderTarget | null = null;
+  const warmTransmissionShaders = (root: Object3D): Promise<unknown> => {
+    linearTarget ??= new WebGLRenderTarget(1, 1, { type: HalfFloatType });
+    const previous = renderer.getRenderTarget();
+    renderer.setRenderTarget(linearTarget);
+    const done = warmShaders(root); // the programs are created synchronously here, for the bound target
+    renderer.setRenderTarget(previous);
+    return done;
+  };
   renderer.info.autoReset = false; // F3 shows whole-frame totals across render passes
   scene.add(camera); // the suit lamp is parented to the camera
   const settings = loadSettings();
@@ -137,6 +159,8 @@ async function boot(): Promise<void> {
   terrain.onChunk = (...a) => rocks.onChunk(...a);
   const dust = new DustMotes();
   scene.add(dust.points);
+  const stormVeil = new StormVeil();
+  scene.add(stormVeil.group);
 
   const colliders = new ColliderSet();
   // Placeholder outpost colliders are kept separate: they only apply if the user's model fails to load.
@@ -239,10 +263,8 @@ async function boot(): Promise<void> {
   terrain.update(SPAWN.x, SPAWN.z, 0);
   terrain.flush();
   rocks.commit();
-  loading.set(0.95, 'Compiling shaders');
-  await new Promise((r) => setTimeout(r, 0));
-  lamp.intensity = 0.0001; // keep light count constant from the first compile
-  renderer.compile(scene, camera);
+  lamp.intensity = 0.0001; // keep the light count constant (shaders are compiled for a fixed set of lights)
+  // Shaders are warmed once everything (including the campaign's props and lights) is in the scene — see warmShaders.
 
   // ---------- gameplay state ----------
   const input = new Input(canvas);
@@ -339,7 +361,8 @@ async function boot(): Promise<void> {
     ];
   };
   const feedCanvas = h<'canvas'>('canvas.feed', { width: 384, height: 216 });
-  const feedTarget = new WebGLRenderTarget(384, 216);
+  // Float depth to match the main view's reversed-Z depth buffer (no z-fighting on distant terrain in the feed).
+  const feedTarget = new WebGLRenderTarget(384, 216, ctx.floatDepth ? { depthTexture: new DepthTexture(384, 216, FloatType) } : {});
   const feedCam = new PerspectiveCamera(55, 384 / 216, 0.1, 30000);
   const feedPixels = new Uint8Array(384 * 216 * 4);
   /** Renders the rover's mast view off-screen and copies it (sRGB-encoded, flipped) into the PDA canvas. */
@@ -370,7 +393,16 @@ async function boot(): Promise<void> {
 
   // ---------- astronaut body + third-person camera (System A) ----------
   let body: PlayerBody | null = null;
-  void PlayerBody.load(`${slotBase}opt/astronaut.glb`).then((b) => { body = b; scene.add(b.root); tool.setArms(b.model); }).catch((e) => console.warn('Astronaut body unavailable:', e));
+  // The loading screen waits for the astronaut (see below) so its set-up and shaders do not stall the first frames;
+  // if it arrives late anyway, its shaders are warmed before it is shown.
+  let shadersWarmed = false;
+  const bodyReady = PlayerBody.load(`${slotBase}opt/astronaut.glb`)
+    .then(async (b) => {
+      if (shadersWarmed) { await warmShaders(b.root); void warmTransmissionShaders(b.root); }
+      body = b; scene.add(b.root); tool.setArms(b.model);
+      if (shadersWarmed) await warmShaders(tool.scene, tool.camera, tool.scene);
+    })
+    .catch((e) => console.warn('Astronaut body unavailable:', e));
   const camBlocker = {
     blocked: (x: number, y: number, z: number) =>
       ground.structures.some((s) => y > s.baseY + 0.2 && y < s.baseY + 2.6 && s.isSolid(x, z))
@@ -389,6 +421,14 @@ async function boot(): Promise<void> {
   // Dialogue (ElevenLabs voice lines) + cinematic background beds; see src/audio/voice.ts and voiceLines.json.
   const voice = new VoiceDirector(audio, base, ui);
   voice.onPlayed = (id) => { mission.flags.add(`vo.${id}`); saveDirty = true; };
+  voice.stale = (l) => {
+    const m = /^obj:([^:]+):(approach|done|after)$/.exec(l.trigger);
+    if (!m) return false;
+    // Arrival lines are stale once that objective is done; completion lines once the story has moved two steps on.
+    if (m[2] === 'approach') return mission.complete || mission.flags.has(`done.${m[1]}`);
+    const i = objIndex(m[1]);
+    return i >= 0 && !mission.complete && mission.index > i + 1;
+  };
   let o2Warned = false;
   const applySettings = (s: Settings) => {
     player.sensitivity = s.sensitivity;
@@ -414,8 +454,29 @@ async function boot(): Promise<void> {
   const cutscenes = new CutscenePlayer(ui);
   const gameFov = camera.fov;
   let actor: Actor | null = null;
-  void Actor.load(`${slotBase}opt/astronaut.glb`).then((a) => { actor = a; scene.add(a.root); }).catch((e) => console.warn('Cutscene actor unavailable:', e));
+  const actorReady = Actor.load(`${slotBase}opt/astronaut.glb`)
+    .then(async (a) => { if (shadersWarmed) await warmShaders(a.root); actor = a; scene.add(a.root); })
+    .catch((e) => console.warn('Cutscene actor unavailable:', e));
   const eyeCam = new PerspectiveCamera();
+  /** Cinematic camera safety (see CineEnv.clampCamera): rays against structures and props, not terrain/cave/rocks. */
+  const camRay = new Raycaster();
+  const NOT_OCCLUDERS = /^(Terrain|Cave|Rocks_\d+|Sky.*|OreField|Footprints.*|Dust.*)$/;
+  const shown = (o: Object3D | null): boolean => { for (; o; o = o.parent) if (!o.visible) return false; return true; };
+  const clampCamera = (from: Vector3, to: Vector3, subject?: Vector3): Vector3 => {
+    const d = to.clone().sub(from), len = d.length();
+    if (len < 0.05) return to;
+    camRay.set(from, d.divideScalar(len));
+    camRay.far = len + 0.35;
+    const occluders = scene.children.filter((o) => !NOT_OCCLUDERS.test(o.name) && o !== body?.actor.root && o !== actor?.root && !(o as unknown as { isLight?: boolean }).isLight);
+    for (const hit of camRay.intersectObjects(occluders, true)) {
+      const m = hit.object as Mesh;
+      const mat = (Array.isArray(m.material) ? m.material[0] : m.material) as { transparent?: boolean; opacity?: number; colorWrite?: boolean } | undefined;
+      if (!m.isMesh || !shown(m) || !mat || mat.colorWrite === false || (mat.transparent && (mat.opacity ?? 1) < 0.6)) continue;
+      if (subject && hit.point.distanceTo(subject) < 3) continue; // the subject itself (orbit around a vehicle)
+      return from.clone().addScaledVector(camRay.ray.direction, Math.max(0, hit.distance - 0.35));
+    }
+    return to;
+  };
   const cineWorld: CutsceneWorld = {
     groundY: (x, z, yHint) => (yHint === undefined ? world.heightAt(x, z) : ground.at(x, z, yHint).h),
     outpost: { x: SITES.outpost.x, z: SITES.outpost.z, floorY: outpostModel?.floorY ?? padY },
@@ -470,7 +531,7 @@ async function boot(): Promise<void> {
   const mining = { deposit: null as string | null, progress: 0, duration: 2.4, grind: 0 };
   const tool = new ToolViewmodel();
   tool.setEnvironment(vehicleEnv);
-  void tool.load(`${slotBase}opt/handdrill.glb`).catch((e) => console.warn('Hand drill model unavailable:', e));
+  void tool.load(`${slotBase}opt/handdrill.glb`).then(() => warmShaders(tool.scene, tool.camera, tool.scene)).catch((e) => console.warn('Hand drill model unavailable:', e));
   const storageUi = new StorageScreen(ui, () => closeStorage());
   pda.inventory = inventory;
   pda.environment = environmentReadings;
@@ -1202,7 +1263,7 @@ async function boot(): Promise<void> {
   const revealVoice = ['reveal:ice:1', 'reveal:ice:2', 'reveal:ice:3', 'reveal:ice:4', 'reveal:ice:5', 'reveal:ice:6', 'reveal:ice:7'].reduce((n, t) => n + triggerLength(t), 0);
   campaign = new CampaignDirector({
     ui, scene, mission, voice, hud, audio, interactions, inventory,
-    env: { eye: () => cineWorld.eye(), fov: gameFov, groundY: (x, z, y) => cineWorld.groundY(x, z, y) },
+    env: { eye: () => cineWorld.eye(), fov: gameFov, groundY: (x, z, y) => cineWorld.groundY(x, z, y), clampCamera },
     playerPos: () => player.pos,
     indoors,
     inCave: () => player.inCave || adapt > 0.35,
@@ -1567,7 +1628,9 @@ async function boot(): Promise<void> {
       if (mode === 'cutscene') cutscenes.update(dt, camera);
       else orbitalMenuTick(dt);
       renderer.info.reset();
+      ctx.begin();
       space.render(renderer);
+      ctx.present();
       frames++; fpsAcc += dt;
       if (fpsAcc >= 0.5) { fps = frames / fpsAcc; frames = 0; fpsAcc = 0; }
       status.fps = fps; status.mode = mode; status.orbital = true; status.pending = terrain.pending;
@@ -1594,7 +1657,9 @@ async function boot(): Promise<void> {
     if (shotCam) { camera.position.copy(shotCam.pos); camera.lookAt(shotCam.look); }
 
     // Eye adaptation, fog and dust inside the cave.
-    const inside = mode !== 'menu' && ground.insideCave(camera.position.x, camera.position.y, camera.position.z);
+    const camInCave = ground.insideCave(camera.position.x, camera.position.y, camera.position.z);
+    const inside = mode !== 'menu' && camInCave;
+    cave.updateIceVisibility(camera.position, camInCave);
     const caveNow = inside ? caveDepthFactor(camera.position.x, camera.position.y, camera.position.z) : 0;
     adapt += (caveNow - adapt) * Math.min(1, dt * 1.2);
     renderer.toneMappingExposure = 1.05 + adapt * 0.85;
@@ -1603,9 +1668,14 @@ async function boot(): Promise<void> {
     dust.setAmount(1 - adapt * 0.7);
     // Dust storm (Ch.4) and restored habitat lighting.
     const stormHere = storm * (indoors() ? 0.3 : 1);
-    if (stormHere > 0.001) { ctx.fog.density += stormHere * 0.0075; ctx.fog.color.lerp(stormFog, Math.min(1, stormHere * 0.85)); dust.setAmount(1 + stormHere * 4); }
-    ctx.sun.intensity = 3.1 * (1 - 0.72 * storm);
-    ctx.hemi.intensity = 1.15 * (1 - 0.35 * storm);
+    // Storm: denser fog (≈70 m visibility at full strength), a dust-brown sky with the sun reduced to a dim disc,
+    // rolling dust walls around the camera and faster, denser wind-blown particles.
+    if (stormHere > 0.001) { ctx.fog.density += stormHere * stormHere * 0.024; ctx.fog.color.lerp(stormFog, Math.min(1, stormHere * 0.95)); dust.setAmount(1 + stormHere * 1.5); }
+    dust.setWind(1 + stormHere * 5);
+    (sky.material as ShaderMaterial).uniforms.uDust.value = Math.min(0.92, stormHere * 1.1);
+    stormVeil.update(dt, camera.position, stormHere);
+    ctx.sun.intensity = 3.1 * (1 - 0.85 * storm);
+    ctx.hemi.intensity = 1.15 * (1 - 0.45 * storm);
     audio.storm = storm;
     domeLight.intensity += (outpostPower * 26 - domeLight.intensity) * Math.min(1, dt * 1.6);
     const lampLit = mode === 'cutscene' ? cutscenes.lamp : lampOn && mode !== 'menu';
@@ -1665,8 +1735,10 @@ async function boot(): Promise<void> {
       }
     }
     renderer.info.reset(); // frame totals (world + tool pass); autoReset is off
+    ctx.begin();
     renderer.render(scene, camera);
     tool.render(renderer, camera, SUN_DIR, 1 - adapt, lampLit);
+    ctx.present();
 
     frames++; fpsAcc += dt; devTimer -= dt;
     if (fpsAcc >= 0.5) { fps = frames / fpsAcc; frames = 0; fpsAcc = 0; }
@@ -1698,6 +1770,14 @@ async function boot(): Promise<void> {
   };
 
   const loop = new GameLoop(SIM_HZ, sim, render);
+  loading.set(0.97, 'Compiling shaders');
+  // All on the loading screen: compiling this many programs stalls the page even with parallel compilation.
+  await Promise.race([Promise.all([bodyReady, actorReady]), new Promise((r) => setTimeout(r, 20000))]);
+  await Promise.all([warmShaders(scene), warmShaders(tool.scene, tool.camera, tool.scene), warmTransmissionShaders(scene)]);
+  // A compiled program is still validated (and its uniforms looked up) the first time it draws, which took over a
+  // second for the whole set on the first visible frame; do it here, behind the loading screen.
+  for (const program of renderer.info.programs ?? []) { program.getUniforms(); program.getAttributes(); }
+  shadersWarmed = true;
   loading.remove();
   setMode('menu');
   ctx.resize();

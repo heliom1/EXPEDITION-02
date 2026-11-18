@@ -59,6 +59,11 @@ export class DustMotes {
     this.mat.uniforms.uCam.value.copy(cam);
   }
 
+  /** Wind speed multiplier (storms blow the particles much faster). */
+  setWind(k: number): void {
+    this.mat.uniforms.uWind.value.set(1.6 * k, 0.05 * k, -0.7 * k);
+  }
+
   setAmount(a: number): void {
     this.mat.uniforms.uAmount.value = a;
   }

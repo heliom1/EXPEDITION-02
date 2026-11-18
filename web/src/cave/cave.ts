@@ -1,6 +1,6 @@
 import {
   BufferAttribute, BufferGeometry, CircleGeometry, Color, Group, InstancedMesh, Matrix4,
-  Mesh, MeshPhysicalMaterial, MeshStandardMaterial, PointLight, Quaternion, SphereGeometry, Vector3, Euler,
+  Mesh, MeshPhysicalMaterial, MeshStandardMaterial, type Object3D, PointLight, Quaternion, SphereGeometry, Vector3, Euler,
 } from 'three';
 import type { LayerTextures } from '../rendering/textures';
 import type { WorldData } from '../world/worldData';
@@ -99,6 +99,9 @@ export class Cave {
   readonly interact: CaveInteractables;
   readonly iceLight: PointLight;
   private beaconLeds: MeshStandardMaterial[] = [];
+  /** Transmissive ice (crystals + frozen pool) and where it is; see updateIceVisibility. */
+  private readonly ice: Object3D[] = [];
+  private readonly iceCentre = new Vector3();
   private t = 0;
   ready = false;
   stats: CaveMeshData['stats'] | null = null;
@@ -190,6 +193,8 @@ export class Cave {
     const poolFloor = caveFloorBelow(ICE.x + 4, ICE.y + 4, ICE.z + 7, 10) ?? iceFloor;
     pool.position.set(ICE.x + 4, poolFloor + 0.06, ICE.z + 7);
     this.group.add(pool);
+    this.ice.push(crystals, pool);
+    this.iceCentre.set(ICE.x, iceFloor, ICE.z);
 
     const m4 = new Matrix4(), q = new Quaternion();
     // The first expedition's survey lamp beside the deposit: the only light in the chamber.
@@ -303,6 +308,16 @@ export class Cave {
     this.group.add(mesh);
     this.stats = data.stats;
     this.ready = true;
+  }
+
+  /**
+   * The ice uses a transmissive material, and while any transmissive mesh is inside the view frustum three.js renders
+   * the whole opaque scene a second time (its transmission pass) — even when the ice is kilometres away behind solid
+   * rock. The chamber is deep underground and can only be seen from inside the cave, so the ice is drawn only there.
+   */
+  updateIceVisibility(camera: Vector3, insideCave: boolean): void {
+    const on = insideCave || camera.distanceToSquared(this.iceCentre) < 120 * 120;
+    if (this.ice[0].visible !== on) for (const o of this.ice) o.visible = on;
   }
 
   update(dt: number): void {

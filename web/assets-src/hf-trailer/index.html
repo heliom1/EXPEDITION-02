@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;700&family=Share+Tech+Mono&display=block" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+    <style>
+      :root { --ink: #eaf6ff; --cy: #78dcff; --accent: #ff7a2e; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #000; }
+      #root { position: relative; width: 1920px; height: 1080px; overflow: hidden; color: var(--ink); font-family: 'Rajdhani', sans-serif; }
+      #stage { position: absolute; left: -30px; top: -30px; width: 1980px; height: 1140px; }
+      video { position: absolute; left: 30px; top: 30px; width: 1920px; height: 1080px; object-fit: cover; z-index: 1; transform-origin: 50% 50%; filter: contrast(1.1) saturate(1.1); }
+      .rgbt { position: relative; display: inline-block; }
+      .rgbt .r, .rgbt .c { position: absolute; left: 0; top: 0; mix-blend-mode: screen; opacity: 0.6; white-space: nowrap; }
+      .rgbt .r { color: #ff2a4a; } .rgbt .c { color: #2af0ff; }
+      .rgbt .m { position: relative; white-space: nowrap; }
+      .hud { position: absolute; z-index: 5; }
+      .hud .eb { font: 400 24px 'Share Tech Mono', monospace; letter-spacing: 0.32em; color: var(--cy); display: block; }
+      .hud .ln { margin-top: 10px; font: 700 60px 'Orbitron', sans-serif; letter-spacing: 0.14em; text-shadow: 0 2px 24px rgba(0,0,0,0.9); }
+      .hud .br { position: absolute; left: -34px; top: -18px; width: 22px; height: 120px; border: 2px solid var(--cy); border-right: none; opacity: 0.9; }
+      .card { left: 160px; bottom: 210px; padding: 18px 30px; background: linear-gradient(90deg, rgba(0,10,20,0.62), rgba(0,10,20,0)); }
+      .card.center { left: 0; right: 0; bottom: auto; top: 450px; text-align: center; background: none; }
+      .card.center .br { display: none; }
+      .slam { inset: 0; display: grid; place-content: center; text-align: center; }
+      .slam .w { font: 900 140px 'Orbitron', sans-serif; letter-spacing: 0.22em; color: #fff; text-shadow: 0 0 34px rgba(120,220,255,0.55), 0 6px 30px rgba(0,0,0,0.9); }
+      .slam .lb { display: inline-block; margin: 14px auto 0; padding: 6px 18px; font: 400 28px 'Share Tech Mono', monospace; letter-spacing: 0.4em; color: #9fe8ff; background: rgba(0, 8, 16, 0.72); text-shadow: 0 2px 14px rgba(0,0,0,0.9); }
+      .slam .w { transform-origin: 50% 50%; }
+      #ask .ln { transform-origin: 50% 50%; }
+      .slam .bar2 { margin: 18px auto 0; width: 520px; height: 3px; background: linear-gradient(90deg, rgba(120,220,255,0), var(--cy), rgba(120,220,255,0)); transform-origin: 50% 50%; }
+      #ask { inset: 0; display: grid; place-content: center; text-align: center; background: radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.35) 40%, rgba(0,0,0,0) 70%); }
+      #ask .ln { font: 700 70px 'Orbitron', sans-serif; letter-spacing: 0.42em; }
+      #dim { position: absolute; inset: 0; z-index: 6; background: #000; opacity: 0; }
+      #title { position: absolute; inset: 0; z-index: 7; display: grid; place-content: center; text-align: center; }
+      #title .frame { position: relative; padding: 70px 120px; }
+      #title .corner { position: absolute; width: 60px; height: 60px; border-color: var(--cy); border-style: solid; opacity: 0; }
+      #title .tl { left: 0; top: 0; border-width: 3px 0 0 3px; } #title .tr { right: 0; top: 0; border-width: 3px 3px 0 0; }
+      #title .bl { left: 0; bottom: 0; border-width: 0 0 3px 3px; } #title .brc { right: 0; bottom: 0; border-width: 0 3px 3px 0; }
+      #title .logo { position: relative; font: 900 150px 'Orbitron', sans-serif; letter-spacing: 0.14em; color: #fff; transform-origin: 50% 50%; }
+      #title em { font-style: normal; color: var(--accent); }
+      #title .slice { position: absolute; left: 120px; top: 70px; font: 900 150px 'Orbitron', sans-serif; letter-spacing: 0.14em; white-space: nowrap; color: #fff; opacity: 0; }
+      #title .s0 { clip-path: inset(0 0 78% 0); } #title .s1 { clip-path: inset(24% 0 52% 0); } #title .s2 { clip-path: inset(50% 0 26% 0); } #title .s3 { clip-path: inset(76% 0 0 0); }
+      #title .rule { margin: 28px auto 0; width: 980px; height: 2px; background: linear-gradient(90deg, rgba(120,220,255,0), var(--cy), rgba(120,220,255,0)); transform-origin: 50% 50%; }
+      #title .sub { margin-top: 22px; font: 400 34px 'Share Tech Mono', monospace; letter-spacing: 0.7em; color: var(--cy); }
+      #title .flare { position: absolute; left: -400px; right: -400px; top: 50%; height: 6px; margin-top: -40px; background: radial-gradient(ellipse at 50% 50%, rgba(200,240,255,0.95) 0%, rgba(120,220,255,0.5) 18%, rgba(120,220,255,0) 60%); filter: blur(2px); transform-origin: 50% 50%; opacity: 0; }
+      #title .tele { position: absolute; font: 400 20px 'Share Tech Mono', monospace; letter-spacing: 0.2em; color: rgba(120,220,255,0.85); opacity: 0; white-space: nowrap; }
+      #scan { position: absolute; left: 0; right: 0; top: 50%; height: 3px; z-index: 8; background: linear-gradient(90deg, rgba(120,220,255,0), rgba(160,235,255,1), rgba(120,220,255,0)); box-shadow: 0 0 30px 8px rgba(120,220,255,0.45); opacity: 0; }
+      #grain { position: absolute; inset: 0; z-index: 9; pointer-events: none; opacity: 0.07; background-image: url("data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22256%22%20height%3D%22256%22%3E%3Cfilter%20id%3D%22n%22%3E%3CfeTurbulence%20type%3D%22fractalNoise%22%20baseFrequency%3D%220.9%22%20numOctaves%3D%222%22%20stitchTiles%3D%22stitch%22%2F%3E%3CfeColorMatrix%20values%3D%220%200%200%200%201%20%200%200%200%200%201%20%200%200%200%200%201%20%200%200%200%200.55%200%22%2F%3E%3C%2Ffilter%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20filter%3D%22url(%23n)%22%2F%3E%3C%2Fsvg%3E"); mix-blend-mode: screen; }
+      #lines { position: absolute; inset: 0; z-index: 9; pointer-events: none; opacity: 0.08; background: repeating-linear-gradient(0deg, rgba(0,0,0,0.6) 0px, rgba(0,0,0,0.6) 1px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 4px); }
+      #vignette { position: absolute; inset: 0; z-index: 9; pointer-events: none; background: radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 55%, rgba(0,0,0,0.6) 100%); }
+      .bar { position: absolute; left: 0; width: 1920px; height: 130px; background: #000; z-index: 11; }
+      #flash { position: absolute; inset: 0; z-index: 10; background: #fff; opacity: 0; mix-blend-mode: screen; }
+      #white { position: absolute; inset: 0; z-index: 10; background: #fff4e6; opacity: 0; }
+      #fade, #fadeout { position: absolute; inset: 0; z-index: 12; background: #000; }
+      #fade { opacity: 1; z-index: 4; } #fadeout { opacity: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="60" data-width="1920" data-height="1080">
+      <div id="stage">
+        <video id="v0" class="clip" data-start="3" data-duration="5" data-track-index="1" src="assets/cuts/space_orbit_craft_0p5_5.mp4" muted playsinline></video>
+        <video id="v1" class="clip" data-start="8" data-duration="2.5" data-track-index="1" src="assets/cuts/space_entry_1p2_2p5.mp4" muted playsinline></video>
+        <video id="v2" class="clip" data-start="10.5" data-duration="3" data-track-index="1" src="assets/cuts/entry_hero_0p4_3.mp4" muted playsinline></video>
+        <video id="v3" class="clip" data-start="13.5" data-duration="2.5" data-track-index="1" src="assets/cuts/entry_meteor_1p2_2p5.mp4" muted playsinline></video>
+        <video id="v4" class="clip" data-start="16" data-duration="2" data-track-index="1" src="assets/cuts/land_chutes_0p6_2.mp4" muted playsinline></video>
+        <video id="v5" class="clip" data-start="18" data-duration="3" data-track-index="1" src="assets/cuts/land_steps_1p5_3.mp4" muted playsinline></video>
+        <video id="v6" class="clip" data-start="21" data-duration="3" data-track-index="1" src="assets/cuts/outpost_aerial_1_3.mp4" muted playsinline></video>
+        <video id="v7" class="clip" data-start="24" data-duration="2" data-track-index="1" src="assets/cuts/panel_0p8_2.mp4" muted playsinline></video>
+        <video id="v8" class="clip" data-start="26" data-duration="1.5" data-track-index="1" src="assets/cuts/reactor_2p5_1p5.mp4" muted playsinline></video>
+        <video id="v9" class="clip" data-start="27.5" data-duration="1.5" data-track-index="1" src="assets/cuts/farm_dolly_1p5_1p5.mp4" muted playsinline></video>
+        <video id="v10" class="clip" data-start="29" data-duration="3" data-track-index="1" src="assets/cuts/storm_1p5_3.mp4" muted playsinline></video>
+        <video id="v11" class="clip" data-start="32" data-duration="2" data-track-index="1" src="assets/cuts/mev_ride_1p2_2.mp4" muted playsinline></video>
+        <video id="v12" class="clip" data-start="34" data-duration="1.5" data-track-index="1" src="assets/cuts/mev_cockpit_1_1p5.mp4" muted playsinline></video>
+        <video id="v13" class="clip" data-start="35.5" data-duration="0.5" data-track-index="1" src="assets/cuts/mev_ride_4p4_0p5.mp4" muted playsinline></video>
+        <video id="v14" class="clip" data-start="36" data-duration="2" data-track-index="1" src="assets/cuts/terrain_plain_0p3_2.mp4" muted playsinline></video>
+        <video id="v15" class="clip" data-start="38" data-duration="1" data-track-index="1" src="assets/cuts/terrain_plain_4p2_1.mp4" muted playsinline></video>
+        <video id="v16" class="clip" data-start="39" data-duration="2" data-track-index="1" src="assets/cuts/r1_mast_0p8_2.mp4" muted playsinline></video>
+        <video id="v17" class="clip" data-start="41" data-duration="1" data-track-index="1" src="assets/cuts/r1_drive_2_1.mp4" muted playsinline></video>
+        <video id="v18" class="clip" data-start="42" data-duration="3" data-track-index="1" src="assets/cuts/cave_mouth_1p5_3.mp4" muted playsinline></video>
+        <video id="v19" class="clip" data-start="45" data-duration="2" data-track-index="1" src="assets/cuts/ice_enter_2_2.mp4" muted playsinline></video>
+        <video id="v20" class="clip" data-start="47" data-duration="4.5" data-track-index="1" src="assets/cuts/ice_crystals_0p3_4p5.mp4" muted playsinline></video>
+        <video id="v21" class="clip" data-start="51.5" data-duration="8.5" data-track-index="1" src="assets/cuts/outpost_drift_0_8p5.mp4" muted playsinline></video>
+      </div>
+      <div id="k0" class="clip hud card center" data-start="0.25" data-duration="2.6" data-track-index="5"><div class="br"></div><span class="eb">INCOMING TRANSMISSION · DSN-43</span><div class="ln rgbt"><span class="r">EXPEDITION 1 · LAST CONTACT 2033</span><span class="c">EXPEDITION 1 · LAST CONTACT 2033</span><span class="m">EXPEDITION 1 · LAST CONTACT 2033</span></div></div>
+      <div id="k1" class="clip hud card" data-start="18.2" data-duration="2.7" data-track-index="5"><div class="br"></div><span class="eb">SOL 1 · ARCADIA PLANITIA</span><div class="ln rgbt"><span class="r">2043. YOU ARE NEXT.</span><span class="c">2043. YOU ARE NEXT.</span><span class="m">2043. YOU ARE NEXT.</span></div></div>
+      <div id="k2" class="clip hud card" data-start="21.2" data-duration="2.7" data-track-index="5"><div class="br"></div><span class="eb">OUTPOST CRIMSON AMALTHEA</span><div class="ln rgbt"><span class="r">TEN YEARS OF SILENCE</span><span class="c">TEN YEARS OF SILENCE</span><span class="m">TEN YEARS OF SILENCE</span></div></div>
+      <div id="p0" class="clip hud slam" data-start="24.05" data-duration="1.9" data-track-index="5"><div class="w rgbt" style="font-size:116px"><span class="r">RESTORE POWER</span><span class="c">RESTORE POWER</span><span class="m">RESTORE POWER</span></div><div class="bar2"></div><div class="lb">01 · BASE SYSTEMS</div></div>
+      <div id="p1" class="clip hud slam" data-start="27.55" data-duration="1.4" data-track-index="5"><div class="w rgbt" style="font-size:116px"><span class="r">SUSTAIN LIFE</span><span class="c">SUSTAIN LIFE</span><span class="m">SUSTAIN LIFE</span></div><div class="bar2"></div><div class="lb">02 · LIFE SUPPORT</div></div>
+      <div id="p2" class="clip hud slam" data-start="29.6" data-duration="2.3" data-track-index="5"><div class="w rgbt" style="font-size:92px"><span class="r">SURVIVE THE STORM</span><span class="c">SURVIVE THE STORM</span><span class="m">SURVIVE THE STORM</span></div><div class="bar2"></div><div class="lb">03 · ENVIRONMENT</div></div>
+      <div id="d0" class="clip hud slam" data-start="32.05" data-duration="1.9" data-track-index="5"><div class="w rgbt" style="font-size:140px"><span class="r">DRIVE</span><span class="c">DRIVE</span><span class="m">DRIVE</span></div><div class="bar2"></div><div class="lb">04 · MEV-1 VEHICLE</div></div>
+      <div id="d1" class="clip hud slam" data-start="36.05" data-duration="1.9" data-track-index="5"><div class="w rgbt" style="font-size:140px"><span class="r">EXPLORE</span><span class="c">EXPLORE</span><span class="m">EXPLORE</span></div><div class="bar2"></div><div class="lb">05 · TERRAIN</div></div>
+      <div id="d2" class="clip hud slam" data-start="39.05" data-duration="1.9" data-track-index="5"><div class="w rgbt" style="font-size:140px"><span class="r">DEPLOY</span><span class="c">DEPLOY</span><span class="m">DEPLOY</span></div><div class="bar2"></div><div class="lb">06 · ROVER R-1</div></div>
+      <div id="d3" class="clip hud slam" data-start="42.05" data-duration="2" data-track-index="5"><div class="w rgbt" style="font-size:140px"><span class="r">DESCEND</span><span class="c">DESCEND</span><span class="m">DESCEND</span></div><div class="bar2"></div><div class="lb">07 · CAVE C-09</div></div>
+      <div id="d4" class="clip hud slam" data-start="45.05" data-duration="1.9" data-track-index="5"><div class="w rgbt" style="font-size:140px"><span class="r">DISCOVER</span><span class="c">DISCOVER</span><span class="m">DISCOVER</span></div><div class="bar2"></div><div class="lb">08 · SUBSURFACE</div></div>
+      <div id="ask" class="clip hud" data-start="49.3" data-duration="2.3" data-track-index="5"><div class="ln rgbt"><span class="r">WHAT DID THEY FIND?</span><span class="c">WHAT DID THEY FIND?</span><span class="m">WHAT DID THEY FIND?</span></div></div>
+      <div id="dim" class="clip" data-start="51.3" data-duration="8.7" data-track-index="6"></div>
+      <div id="title" class="clip" data-start="51.5" data-duration="8.5" data-track-index="7">
+        <div class="frame">
+          <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner brc"></div>
+          <div class="flare"></div>
+          <div class="logo rgbt"><span class="r">EXPEDITION <em>02</em></span><span class="c">EXPEDITION <em>02</em></span><span class="m">EXPEDITION <em>02</em></span></div>
+          <div class="slice s0">EXPEDITION <em>02</em></div><div class="slice s1">EXPEDITION <em>02</em></div><div class="slice s2">EXPEDITION <em>02</em></div><div class="slice s3">EXPEDITION <em>02</em></div>
+          <div class="rule"></div>
+          <div class="sub">MARS · 2043</div>
+          <div class="tele" style="left:76px; top:14px">ARCADIA PLANITIA 46.7°N 150.4°W</div>
+          <div class="tele" style="right:76px; top:14px">SIGNAL ACQUIRED ▮▮▮▮▯</div>
+          <div class="tele" style="left:76px; bottom:14px">CREW 01 · SOL 001</div>
+          <div class="tele" style="right:76px; bottom:14px">MISSION STATUS · ACTIVE</div>
+        </div>
+      </div>
+      <div id="scan" class="clip" data-start="51.4" data-duration="1" data-track-index="8"></div>
+      <div id="grain" class="clip" data-start="0" data-duration="60" data-track-index="9"></div>
+      <div id="lines" class="clip" data-start="0" data-duration="60" data-track-index="9"></div>
+      <div id="vignette" class="clip" data-start="0" data-duration="60" data-track-index="9"></div>
+      <div id="flash" class="clip" data-start="0" data-duration="60" data-track-index="10"></div>
+      <div id="white" class="clip" data-start="15" data-duration="1.8" data-track-index="10"></div>
+      <div class="clip bar" style="top:0" data-start="0" data-duration="60" data-track-index="11"></div>
+      <div class="clip bar" style="bottom:0" data-start="0" data-duration="60" data-track-index="11"></div>
+      <div id="fade" class="clip" data-start="0" data-duration="3.3" data-track-index="12"></div>
+      <div id="fadeout" class="clip" data-start="58" data-duration="2" data-track-index="12"></div>
+      <audio id="mus" class="clip" data-start="0" data-duration="60" data-track-index="20" src="assets/audio/music_v2_a.mp3" data-volume="0.9" data-fade-out="1"></audio>
+      <audio id="glitch0" class="clip" data-start="0.1" data-duration="2" data-track-index="21" src="assets/audio/glitch_a.mp3" data-volume="0.55" data-fade-out="0.3"></audio>
+      <audio id="radio" class="clip" data-start="0.6" data-duration="2.2" data-track-index="22" src="assets/audio/static_a.mp3" data-volume="0.35" data-fade-out="0.3"></audio>
+      <audio id="hud0" class="clip" data-start="2.4" data-duration="1.5" data-track-index="23" src="assets/audio/hud_a.mp3" data-volume="0.35" data-fade-out="0.2"></audio>
+      <audio id="braam1" class="clip" data-start="8" data-duration="6" data-track-index="24" src="assets/audio/braam_a.mp3" data-volume="0.6" data-fade-out="1.5"></audio>
+      <audio id="reentry" class="clip" data-start="8" data-duration="8" data-track-index="25" src="assets/audio/reentry_a.mp3" data-volume="0.8" data-fade-in="0.3" data-fade-out="0.8"></audio>
+      <audio id="wh0" class="clip" data-start="15.6" data-duration="2" data-track-index="26" src="assets/audio/whoosh_a.mp3" data-volume="0.7"></audio>
+      <audio id="wind" class="clip" data-start="16" data-duration="8" data-track-index="27" src="assets/audio/wind_b.mp3" data-volume="0.35" data-fade-in="0.3" data-fade-out="1.5"></audio>
+      <audio id="breath" class="clip" data-start="18" data-duration="4" data-track-index="28" src="assets/audio/breath_a.mp3" data-volume="0.4" data-fade-in="0.5" data-fade-out="0.8"></audio>
+      <audio id="ui1" class="clip" data-start="24" data-duration="1.5" data-track-index="29" src="assets/audio/hud_a.mp3" data-volume="0.45" data-fade-out="0.2"></audio>
+      <audio id="power" class="clip" data-start="24" data-duration="4" data-track-index="30" src="assets/audio/power_a.mp3" data-volume="0.5" data-fade-out="1.2"></audio>
+      <audio id="storm" class="clip" data-start="29" data-duration="3" data-track-index="31" src="assets/audio/storm_a.mp3" data-volume="0.8" data-fade-in="0.2" data-fade-out="0.6"></audio>
+      <audio id="engine" class="clip" data-start="32" data-duration="4" data-track-index="32" src="assets/audio/rover_a.mp3" data-volume="0.55" data-fade-in="0.1" data-fade-out="0.6"></audio>
+      <audio id="wh1" class="clip" data-start="35.8" data-duration="2" data-track-index="33" src="assets/audio/whoosh_b.mp3" data-volume="0.6"></audio>
+      <audio id="wh2" class="clip" data-start="37.8" data-duration="2" data-track-index="34" src="assets/audio/whoosh_a.mp3" data-volume="0.6"></audio>
+      <audio id="rover" class="clip" data-start="39.1" data-duration="2.6" data-track-index="35" src="assets/audio/rover_a.mp3" data-volume="0.4" data-fade-in="0.1" data-fade-out="0.6"></audio>
+      <audio id="ui2" class="clip" data-start="41" data-duration="1.5" data-track-index="36" src="assets/audio/hud_a.mp3" data-volume="0.4" data-fade-out="0.2"></audio>
+      <audio id="wh3" class="clip" data-start="41.8" data-duration="2" data-track-index="37" src="assets/audio/whoosh_b.mp3" data-volume="0.6"></audio>
+      <audio id="riser" class="clip" data-start="43" data-duration="4" data-track-index="38" src="assets/audio/riser_a.mp3" data-volume="0.5" data-fade-in="0.3"></audio>
+      <audio id="boom1" class="clip" data-start="47" data-duration="6" data-track-index="39" src="assets/audio/boom_b.mp3" data-volume="0.8" data-fade-out="1.5"></audio>
+      <audio id="heart2" class="clip" data-start="49.3" data-duration="2.4" data-track-index="40" src="assets/audio/heart_b.mp3" data-volume="0.7" data-fade-in="0.2" data-fade-out="0.4"></audio>
+      <audio id="glitch1" class="clip" data-start="51.4" data-duration="1.2" data-track-index="41" src="assets/audio/glitch_a.mp3" data-volume="0.5" data-fade-out="0.2"></audio>
+      <audio id="braam2" class="clip" data-start="51.5" data-duration="7" data-track-index="42" src="assets/audio/braam_a.mp3" data-volume="0.95" data-fade-out="3"></audio>
+    </div>
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo("#v0", {"scale":1}, {"immediateRender":false,"scale":1.07,"duration":5,"ease":"none"}, 3);
+      tl.fromTo("#v1", {"scale":1.16}, {"immediateRender":false,"scale":1.02,"duration":0.45,"ease":"expo.out"}, 8);
+      tl.fromTo("#v1", {"filter":"blur(14px) contrast(1.1) saturate(1.1)"}, {"immediateRender":false,"filter":"blur(0px) contrast(1.1) saturate(1.1)","duration":0.18,"ease":"power2.out"}, 8);
+      tl.fromTo("#v2", {"scale":1.16}, {"immediateRender":false,"scale":1.02,"duration":0.45,"ease":"expo.out"}, 10.5);
+      tl.fromTo("#v2", {"filter":"blur(14px) contrast(1.1) saturate(1.1)"}, {"immediateRender":false,"filter":"blur(0px) contrast(1.1) saturate(1.1)","duration":0.18,"ease":"power2.out"}, 10.5);
+      tl.fromTo("#v3", {"scale":1}, {"immediateRender":false,"scale":1.04,"duration":2.5,"ease":"none"}, 13.5);
+      tl.fromTo("#v3", {"filter":"blur(14px) contrast(1.1) saturate(1.1)"}, {"immediateRender":false,"filter":"blur(0px) contrast(1.1) saturate(1.1)","duration":0.18,"ease":"power2.out"}, 13.5);
+      tl.fromTo("#v4", {"scale":1.16}, {"immediateRender":false,"scale":1.02,"duration":0.45,"ease":"expo.out"}, 16);
+      tl.fromTo("#v4", {"filter":"blur(14px) contrast(1.1) saturate(1.1)"}, {"immediateRender":false,"filter":"blur(0px) contrast(1.1) saturate(1.1)","duration":0.18,"ease":"power2.out"}, 16);
+      tl.fromTo("#v5", {"scale":1}, {"immediateRender":false,"scale":1.07,"duration":3,"ease":"none"}, 18);
+      tl.fromTo("#v5", {"filter":"blur(14px) contrast(1.1) saturate(1.1)"}, {"immediateRender":false,"filter":"blur(0px) contrast(1.1) saturate(1.1)","duration":0.18,"ease":"power2.out"}, 18);
+      tl.fromTo("#v6", {"scale":1}, {"immediateRender":false,"scale":1.07,"duration":3,"ease":"none"}, 21);
+      tl.fromTo("#v6", {"filter":"blur(14px) contrast(1.1) saturate(1.1)"}, {"immediateRender":false,"filter":"blur(0px) contrast(1.1) saturate(1.1)","duration":0.18,"ease":"power2.out"}, 21);
+      tl.fromTo("#v7", {"scale":1.16}, {"immediateRender":false,"scale":1.02,"duration":0.45,"ease":"expo.out"}, 24);
+      tl.fromTo("#v7", {"filter":"blur(14px) contrast(1.1) saturate(1.1)"}, {"immediateRender":false,"filter":"blur(0px) contrast(1.1) saturate(1.1)","duration":0.18,"ease":"power2.out"}, 24);
+      tl.fromTo("#v8", {"scale":1}, {"immediateRender":false,"scale":1.04,"duration":1.5,"ease":"none"}, 26);
+      tl.fromTo("#v8", {"filter":"blur(14px) contrast(1.1) saturate(1.1)"}, {"immediateRender":false,"filter":"blur(0px) contrast(1.1) saturate(1.1)","duration":0.18,"ease":"power2.out"}, 26);
+      tl.fromTo("#v9", {"scale":1}, {"immediateRender":false,"scale":1.04,"duration":1.5,"ease":"none"}, 27.5);
+      tl.fromTo("#v9", {"filter":"blur(14px) contrast(1.1) saturate(1.1)"}, {"immediateRender":false,"filter":"blur(0px) contrast(1.1) saturate(1.1)","duration":0.18,"ease":"power2.out"}, 27.5);
+      tl.fromTo("#v10", {"scale":1}, {"immediateRender":false,"scale":1.07,"duration":3,"ease":"none"}, 29);
+      tl.fromTo("#v10", {"filter":"blur(14px) contrast(1.1) saturate(1.1)"}, {"immediateRender":false,"filter":"blur(0px) contrast(1.1) saturate(1.1)","duration":0.18,"ease":"power2.out"}, 29);
+      tl.fromTo("#v11", {"scale":1.16}, {"immediateRender":false,"scale":1.02,"duration":0.45,"ease":"expo.out"}, 32);
+      tl.fromTo("#v11", {"filter":"blur(14px) contrast(1.1) saturate(1.1)"}, {"immediateRender":false,"filter":"blur(0px) contrast(1.1) saturate(1.1)","duration":0.18,"ease":"power2.out"}, 32);
+      tl.fromTo("#v12", {"scale":1.16}, {"immediateRender":false,"scale":1.02,"duration":0.45,"ease":"expo.out"}, 34);
+      tl.fromTo("#v12", {"filter":"blur(14px) contrast(1.1) saturate(1.1)"}, {"immediateRender":false,"filter":"blur(0px) contrast(1.1) saturate(1.1)","duration":0.18,"ease":"power2.out"}, 34);
+      tl.fromTo("#v13", {"scale":1}, {"immediateRender":false,"scale":1.04,"duration":0.5,"ease":"none"}, 35.5);
+      tl.fromTo("#v13", {"filter":"blur(14px) contrast(1.1) saturate(1.1)"}, {"immediateRender":false,"filter":"blur(0px) contrast(1.1) saturate(1.1)","duration":0.18,"ease":"power2.out"}, 35.5);
+      tl.fromTo("#v14", {"scale":1.16}, {"immediateRender":false,"scale":1.02,"duration":0.45,"ease":"expo.out"}, 36);
+      tl.fromTo("#v14", {"filter":"blur(14px) contrast(1.1) saturate(1.1)"}, {"immediateRender":false,"filter":"blur(0px) contrast(1.1) saturate(1.1)","duration":0.18,"ease":"power2.out"}, 36);
+      tl.fromTo("#v15", {"scale":1.16}, {"immediateRender":false,"scale":1.02,"duration":0.45,"ease":"expo.out"}, 38);
+      tl.fromTo("#v15", {"filter":"blur(14px) contrast(1.1) saturate(1.1)"}, {"immediateRender":false,"filter":"blur(0px) contrast(1.1) saturate(1.1)","duration":0.18,"ease":"power2.out"}, 38);
+      tl.fromTo("#v16", {"scale":1}, {"immediateRender":false,"scale":1.04,"duration":2,"ease":"none"}, 39);
+      tl.fromTo("#v16", {"filter":"blur(14px) contrast(1.1) saturate(1.1)"}, {"immediateRender":false,"filter":"blur(0px) contrast(1.1) saturate(1.1)","duration":0.18,"ease":"power2.out"}, 39);
+      tl.fromTo("#v17", {"scale":1}, {"immediateRender":false,"scale":1.04,"duration":1,"ease":"none"}, 41);
+      tl.fromTo("#v17", {"filter":"blur(14px) contrast(1.1) saturate(1.1)"}, {"immediateRender":false,"filter":"blur(0px) contrast(1.1) saturate(1.1)","duration":0.18,"ease":"power2.out"}, 41);
+      tl.fromTo("#v18", {"scale":1.16}, {"immediateRender":false,"scale":1.02,"duration":0.45,"ease":"expo.out"}, 42);
+      tl.fromTo("#v18", {"filter":"blur(14px) contrast(1.1) saturate(1.1)"}, {"immediateRender":false,"filter":"blur(0px) contrast(1.1) saturate(1.1)","duration":0.18,"ease":"power2.out"}, 42);
+      tl.fromTo("#v19", {"scale":1.16}, {"immediateRender":false,"scale":1.02,"duration":0.45,"ease":"expo.out"}, 45);
+      tl.fromTo("#v19", {"filter":"blur(14px) contrast(1.1) saturate(1.1)"}, {"immediateRender":false,"filter":"blur(0px) contrast(1.1) saturate(1.1)","duration":0.18,"ease":"power2.out"}, 45);
+      tl.fromTo("#v20", {"scale":1.16}, {"immediateRender":false,"scale":1.02,"duration":0.45,"ease":"expo.out"}, 47);
+      tl.fromTo("#v20", {"filter":"blur(14px) contrast(1.1) saturate(1.1)"}, {"immediateRender":false,"filter":"blur(0px) contrast(1.1) saturate(1.1)","duration":0.18,"ease":"power2.out"}, 47);
+      tl.fromTo("#v21", {"scale":1}, {"immediateRender":false,"scale":1.07,"duration":8.5,"ease":"none"}, 51.5);
+      tl.fromTo("#v21", {"filter":"blur(14px) contrast(1.1) saturate(1.1)"}, {"immediateRender":false,"filter":"blur(0px) contrast(1.1) saturate(1.1)","duration":0.18,"ease":"power2.out"}, 51.5);
+      tl.fromTo("#flash", {"opacity":0.75}, {"immediateRender":false,"opacity":0,"duration":0.3,"ease":"power2.out"}, 8);
+      tl.fromTo('#stage', { x: 0, y: 0 }, { keyframes: [{ x: -14, y: 8, duration: 0.04 }, { x: 11, y: -9, duration: 0.04 }, { x: -7, y: 6, duration: 0.05 }, { x: 4, y: -3, duration: 0.05 }, { x: 0, y: 0, duration: 0.06 }], immediateRender: false }, 8);
+      tl.fromTo("#flash", {"opacity":0.75}, {"immediateRender":false,"opacity":0,"duration":0.3,"ease":"power2.out"}, 16);
+      tl.fromTo('#stage', { x: 0, y: 0 }, { keyframes: [{ x: -14, y: 8, duration: 0.04 }, { x: 11, y: -9, duration: 0.04 }, { x: -7, y: 6, duration: 0.05 }, { x: 4, y: -3, duration: 0.05 }, { x: 0, y: 0, duration: 0.06 }], immediateRender: false }, 16);
+      tl.fromTo("#flash", {"opacity":0.75}, {"immediateRender":false,"opacity":0,"duration":0.3,"ease":"power2.out"}, 24);
+      tl.fromTo('#stage', { x: 0, y: 0 }, { keyframes: [{ x: -14, y: 8, duration: 0.04 }, { x: 11, y: -9, duration: 0.04 }, { x: -7, y: 6, duration: 0.05 }, { x: 4, y: -3, duration: 0.05 }, { x: 0, y: 0, duration: 0.06 }], immediateRender: false }, 24);
+      tl.fromTo("#flash", {"opacity":0.75}, {"immediateRender":false,"opacity":0,"duration":0.3,"ease":"power2.out"}, 32);
+      tl.fromTo('#stage', { x: 0, y: 0 }, { keyframes: [{ x: -14, y: 8, duration: 0.04 }, { x: 11, y: -9, duration: 0.04 }, { x: -7, y: 6, duration: 0.05 }, { x: 4, y: -3, duration: 0.05 }, { x: 0, y: 0, duration: 0.06 }], immediateRender: false }, 32);
+      tl.fromTo("#flash", {"opacity":0.75}, {"immediateRender":false,"opacity":0,"duration":0.3,"ease":"power2.out"}, 34);
+      tl.fromTo('#stage', { x: 0, y: 0 }, { keyframes: [{ x: -14, y: 8, duration: 0.04 }, { x: 11, y: -9, duration: 0.04 }, { x: -7, y: 6, duration: 0.05 }, { x: 4, y: -3, duration: 0.05 }, { x: 0, y: 0, duration: 0.06 }], immediateRender: false }, 34);
+      tl.fromTo("#flash", {"opacity":0.75}, {"immediateRender":false,"opacity":0,"duration":0.3,"ease":"power2.out"}, 36);
+      tl.fromTo('#stage', { x: 0, y: 0 }, { keyframes: [{ x: -14, y: 8, duration: 0.04 }, { x: 11, y: -9, duration: 0.04 }, { x: -7, y: 6, duration: 0.05 }, { x: 4, y: -3, duration: 0.05 }, { x: 0, y: 0, duration: 0.06 }], immediateRender: false }, 36);
+      tl.fromTo("#flash", {"opacity":0.75}, {"immediateRender":false,"opacity":0,"duration":0.3,"ease":"power2.out"}, 38);
+      tl.fromTo('#stage', { x: 0, y: 0 }, { keyframes: [{ x: -14, y: 8, duration: 0.04 }, { x: 11, y: -9, duration: 0.04 }, { x: -7, y: 6, duration: 0.05 }, { x: 4, y: -3, duration: 0.05 }, { x: 0, y: 0, duration: 0.06 }], immediateRender: false }, 38);
+      tl.fromTo("#flash", {"opacity":0.75}, {"immediateRender":false,"opacity":0,"duration":0.3,"ease":"power2.out"}, 40);
+      tl.fromTo('#stage', { x: 0, y: 0 }, { keyframes: [{ x: -14, y: 8, duration: 0.04 }, { x: 11, y: -9, duration: 0.04 }, { x: -7, y: 6, duration: 0.05 }, { x: 4, y: -3, duration: 0.05 }, { x: 0, y: 0, duration: 0.06 }], immediateRender: false }, 40);
+      tl.fromTo("#flash", {"opacity":0.75}, {"immediateRender":false,"opacity":0,"duration":0.3,"ease":"power2.out"}, 42);
+      tl.fromTo('#stage', { x: 0, y: 0 }, { keyframes: [{ x: -14, y: 8, duration: 0.04 }, { x: 11, y: -9, duration: 0.04 }, { x: -7, y: 6, duration: 0.05 }, { x: 4, y: -3, duration: 0.05 }, { x: 0, y: 0, duration: 0.06 }], immediateRender: false }, 42);
+      tl.fromTo("#flash", {"opacity":0.75}, {"immediateRender":false,"opacity":0,"duration":0.3,"ease":"power2.out"}, 45);
+      tl.fromTo('#stage', { x: 0, y: 0 }, { keyframes: [{ x: -14, y: 8, duration: 0.04 }, { x: 11, y: -9, duration: 0.04 }, { x: -7, y: 6, duration: 0.05 }, { x: 4, y: -3, duration: 0.05 }, { x: 0, y: 0, duration: 0.06 }], immediateRender: false }, 45);
+      tl.fromTo("#flash", {"opacity":0.75}, {"immediateRender":false,"opacity":0,"duration":0.3,"ease":"power2.out"}, 47);
+      tl.fromTo('#stage', { x: 0, y: 0 }, { keyframes: [{ x: -14, y: 8, duration: 0.04 }, { x: 11, y: -9, duration: 0.04 }, { x: -7, y: 6, duration: 0.05 }, { x: 4, y: -3, duration: 0.05 }, { x: 0, y: 0, duration: 0.06 }], immediateRender: false }, 47);
+      tl.fromTo("#flash", {"opacity":0.75}, {"immediateRender":false,"opacity":0,"duration":0.3,"ease":"power2.out"}, 51.5);
+      tl.fromTo('#stage', { x: 0, y: 0 }, { keyframes: [{ x: -14, y: 8, duration: 0.04 }, { x: 11, y: -9, duration: 0.04 }, { x: -7, y: 6, duration: 0.05 }, { x: 4, y: -3, duration: 0.05 }, { x: 0, y: 0, duration: 0.06 }], immediateRender: false }, 51.5);
+      tl.fromTo("#white", {"opacity":0}, {"immediateRender":false,"opacity":1,"duration":0.5,"ease":"power2.in"}, 15.5);
+      tl.fromTo("#white", {"opacity":1}, {"immediateRender":false,"opacity":0,"duration":0.6,"ease":"power2.out"}, 16);
+      tl.fromTo("#k0 .eb", {"clipPath":"inset(0 100% 0 0)"}, {"immediateRender":false,"clipPath":"inset(0 0% 0 0)","duration":0.6,"ease":"steps(24)"}, 0.25);
+      tl.fromTo("#k0 .ln", {"opacity":0,"x":-30,"filter":"blur(6px)"}, {"immediateRender":false,"opacity":1,"x":0,"filter":"blur(0px)","duration":0.35,"ease":"power3.out"}, 0.5);
+      tl.fromTo("#k0 .ln .r", {"x":-10}, {"immediateRender":false,"x":0,"duration":0.5,"ease":"steps(6)"}, 0.5);
+      tl.fromTo("#k0 .ln .c", {"x":10}, {"immediateRender":false,"x":0,"duration":0.5,"ease":"steps(6)"}, 0.5);
+      tl.fromTo("#k0 .br", {"scale":1.3,"opacity":0}, {"immediateRender":false,"scale":1,"opacity":1,"duration":0.3,"ease":"power3.out"}, 0.25);
+      tl.fromTo("#k0", {"opacity":1}, {"immediateRender":false,"opacity":0,"duration":0.3}, 2.5500000000000003);
+      tl.fromTo("#k1 .eb", {"clipPath":"inset(0 100% 0 0)"}, {"immediateRender":false,"clipPath":"inset(0 0% 0 0)","duration":0.6,"ease":"steps(24)"}, 18.2);
+      tl.fromTo("#k1 .ln", {"opacity":0,"x":-30,"filter":"blur(6px)"}, {"immediateRender":false,"opacity":1,"x":0,"filter":"blur(0px)","duration":0.35,"ease":"power3.out"}, 18.45);
+      tl.fromTo("#k1 .ln .r", {"x":-10}, {"immediateRender":false,"x":0,"duration":0.5,"ease":"steps(6)"}, 18.45);
+      tl.fromTo("#k1 .ln .c", {"x":10}, {"immediateRender":false,"x":0,"duration":0.5,"ease":"steps(6)"}, 18.45);
+      tl.fromTo("#k1 .br", {"scale":1.3,"opacity":0}, {"immediateRender":false,"scale":1,"opacity":1,"duration":0.3,"ease":"power3.out"}, 18.2);
+      tl.fromTo("#k1", {"opacity":1}, {"immediateRender":false,"opacity":0,"duration":0.3}, 20.599999999999998);
+      tl.fromTo("#k2 .eb", {"clipPath":"inset(0 100% 0 0)"}, {"immediateRender":false,"clipPath":"inset(0 0% 0 0)","duration":0.6,"ease":"steps(24)"}, 21.2);
+      tl.fromTo("#k2 .ln", {"opacity":0,"x":-30,"filter":"blur(6px)"}, {"immediateRender":false,"opacity":1,"x":0,"filter":"blur(0px)","duration":0.35,"ease":"power3.out"}, 21.45);
+      tl.fromTo("#k2 .ln .r", {"x":-10}, {"immediateRender":false,"x":0,"duration":0.5,"ease":"steps(6)"}, 21.45);
+      tl.fromTo("#k2 .ln .c", {"x":10}, {"immediateRender":false,"x":0,"duration":0.5,"ease":"steps(6)"}, 21.45);
+      tl.fromTo("#k2 .br", {"scale":1.3,"opacity":0}, {"immediateRender":false,"scale":1,"opacity":1,"duration":0.3,"ease":"power3.out"}, 21.2);
+      tl.fromTo("#k2", {"opacity":1}, {"immediateRender":false,"opacity":0,"duration":0.3}, 23.599999999999998);
+      tl.fromTo("#p0 .w", {"scaleX":2.2,"scaleY":1.5,"opacity":0}, {"immediateRender":false,"scaleX":1,"scaleY":1,"opacity":1,"duration":0.22,"ease":"expo.out"}, 24.05);
+      tl.fromTo("#p0 .w .r", {"x":-18}, {"immediateRender":false,"x":0,"duration":0.4,"ease":"steps(5)"}, 24.05);
+      tl.fromTo("#p0 .w .c", {"x":18}, {"immediateRender":false,"x":0,"duration":0.4,"ease":"steps(5)"}, 24.05);
+      tl.fromTo("#p0 .lb", {"opacity":0,"x":-40}, {"immediateRender":false,"opacity":1,"x":0,"duration":0.3,"ease":"power3.out"}, 24.13);
+      tl.fromTo("#p0 .bar2", {"scaleX":0}, {"immediateRender":false,"scaleX":1,"duration":0.35,"ease":"expo.out"}, 24.1);
+      tl.fromTo("#p0", {"opacity":1}, {"immediateRender":false,"opacity":0,"duration":0.18}, 25.77);
+      tl.fromTo("#p1 .w", {"scaleX":2.2,"scaleY":1.5,"opacity":0}, {"immediateRender":false,"scaleX":1,"scaleY":1,"opacity":1,"duration":0.22,"ease":"expo.out"}, 27.55);
+      tl.fromTo("#p1 .w .r", {"x":-18}, {"immediateRender":false,"x":0,"duration":0.4,"ease":"steps(5)"}, 27.55);
+      tl.fromTo("#p1 .w .c", {"x":18}, {"immediateRender":false,"x":0,"duration":0.4,"ease":"steps(5)"}, 27.55);
+      tl.fromTo("#p1 .lb", {"opacity":0,"x":-40}, {"immediateRender":false,"opacity":1,"x":0,"duration":0.3,"ease":"power3.out"}, 27.63);
+      tl.fromTo("#p1 .bar2", {"scaleX":0}, {"immediateRender":false,"scaleX":1,"duration":0.35,"ease":"expo.out"}, 27.6);
+      tl.fromTo("#p1", {"opacity":1}, {"immediateRender":false,"opacity":0,"duration":0.18}, 28.77);
+      tl.fromTo("#p2 .w", {"scaleX":2.2,"scaleY":1.5,"opacity":0}, {"immediateRender":false,"scaleX":1,"scaleY":1,"opacity":1,"duration":0.22,"ease":"expo.out"}, 29.6);
+      tl.fromTo("#p2 .w .r", {"x":-18}, {"immediateRender":false,"x":0,"duration":0.4,"ease":"steps(5)"}, 29.6);
+      tl.fromTo("#p2 .w .c", {"x":18}, {"immediateRender":false,"x":0,"duration":0.4,"ease":"steps(5)"}, 29.6);
+      tl.fromTo("#p2 .lb", {"opacity":0,"x":-40}, {"immediateRender":false,"opacity":1,"x":0,"duration":0.3,"ease":"power3.out"}, 29.68);
+      tl.fromTo("#p2 .bar2", {"scaleX":0}, {"immediateRender":false,"scaleX":1,"duration":0.35,"ease":"expo.out"}, 29.650000000000002);
+      tl.fromTo("#p2", {"opacity":1}, {"immediateRender":false,"opacity":0,"duration":0.18}, 31.720000000000002);
+      tl.fromTo("#d0 .w", {"scaleX":2.2,"scaleY":1.5,"opacity":0}, {"immediateRender":false,"scaleX":1,"scaleY":1,"opacity":1,"duration":0.22,"ease":"expo.out"}, 32.05);
+      tl.fromTo("#d0 .w .r", {"x":-18}, {"immediateRender":false,"x":0,"duration":0.4,"ease":"steps(5)"}, 32.05);
+      tl.fromTo("#d0 .w .c", {"x":18}, {"immediateRender":false,"x":0,"duration":0.4,"ease":"steps(5)"}, 32.05);
+      tl.fromTo("#d0 .lb", {"opacity":0,"x":-40}, {"immediateRender":false,"opacity":1,"x":0,"duration":0.3,"ease":"power3.out"}, 32.129999999999995);
+      tl.fromTo("#d0 .bar2", {"scaleX":0}, {"immediateRender":false,"scaleX":1,"duration":0.35,"ease":"expo.out"}, 32.099999999999994);
+      tl.fromTo("#d0", {"opacity":1}, {"immediateRender":false,"opacity":0,"duration":0.18}, 33.769999999999996);
+      tl.fromTo("#d1 .w", {"scaleX":2.2,"scaleY":1.5,"opacity":0}, {"immediateRender":false,"scaleX":1,"scaleY":1,"opacity":1,"duration":0.22,"ease":"expo.out"}, 36.05);
+      tl.fromTo("#d1 .w .r", {"x":-18}, {"immediateRender":false,"x":0,"duration":0.4,"ease":"steps(5)"}, 36.05);
+      tl.fromTo("#d1 .w .c", {"x":18}, {"immediateRender":false,"x":0,"duration":0.4,"ease":"steps(5)"}, 36.05);
+      tl.fromTo("#d1 .lb", {"opacity":0,"x":-40}, {"immediateRender":false,"opacity":1,"x":0,"duration":0.3,"ease":"power3.out"}, 36.129999999999995);
+      tl.fromTo("#d1 .bar2", {"scaleX":0}, {"immediateRender":false,"scaleX":1,"duration":0.35,"ease":"expo.out"}, 36.099999999999994);
+      tl.fromTo("#d1", {"opacity":1}, {"immediateRender":false,"opacity":0,"duration":0.18}, 37.769999999999996);
+      tl.fromTo("#d2 .w", {"scaleX":2.2,"scaleY":1.5,"opacity":0}, {"immediateRender":false,"scaleX":1,"scaleY":1,"opacity":1,"duration":0.22,"ease":"expo.out"}, 39.05);
+      tl.fromTo("#d2 .w .r", {"x":-18}, {"immediateRender":false,"x":0,"duration":0.4,"ease":"steps(5)"}, 39.05);
+      tl.fromTo("#d2 .w .c", {"x":18}, {"immediateRender":false,"x":0,"duration":0.4,"ease":"steps(5)"}, 39.05);
+      tl.fromTo("#d2 .lb", {"opacity":0,"x":-40}, {"immediateRender":false,"opacity":1,"x":0,"duration":0.3,"ease":"power3.out"}, 39.129999999999995);
+      tl.fromTo("#d2 .bar2", {"scaleX":0}, {"immediateRender":false,"scaleX":1,"duration":0.35,"ease":"expo.out"}, 39.099999999999994);
+      tl.fromTo("#d2", {"opacity":1}, {"immediateRender":false,"opacity":0,"duration":0.18}, 40.769999999999996);
+      tl.fromTo("#d3 .w", {"scaleX":2.2,"scaleY":1.5,"opacity":0}, {"immediateRender":false,"scaleX":1,"scaleY":1,"opacity":1,"duration":0.22,"ease":"expo.out"}, 42.05);
+      tl.fromTo("#d3 .w .r", {"x":-18}, {"immediateRender":false,"x":0,"duration":0.4,"ease":"steps(5)"}, 42.05);
+      tl.fromTo("#d3 .w .c", {"x":18}, {"immediateRender":false,"x":0,"duration":0.4,"ease":"steps(5)"}, 42.05);
+      tl.fromTo("#d3 .lb", {"opacity":0,"x":-40}, {"immediateRender":false,"opacity":1,"x":0,"duration":0.3,"ease":"power3.out"}, 42.129999999999995);
+      tl.fromTo("#d3 .bar2", {"scaleX":0}, {"immediateRender":false,"scaleX":1,"duration":0.35,"ease":"expo.out"}, 42.099999999999994);
+      tl.fromTo("#d3", {"opacity":1}, {"immediateRender":false,"opacity":0,"duration":0.18}, 43.87);
+      tl.fromTo("#d4 .w", {"scaleX":2.2,"scaleY":1.5,"opacity":0}, {"immediateRender":false,"scaleX":1,"scaleY":1,"opacity":1,"duration":0.22,"ease":"expo.out"}, 45.05);
+      tl.fromTo("#d4 .w .r", {"x":-18}, {"immediateRender":false,"x":0,"duration":0.4,"ease":"steps(5)"}, 45.05);
+      tl.fromTo("#d4 .w .c", {"x":18}, {"immediateRender":false,"x":0,"duration":0.4,"ease":"steps(5)"}, 45.05);
+      tl.fromTo("#d4 .lb", {"opacity":0,"x":-40}, {"immediateRender":false,"opacity":1,"x":0,"duration":0.3,"ease":"power3.out"}, 45.129999999999995);
+      tl.fromTo("#d4 .bar2", {"scaleX":0}, {"immediateRender":false,"scaleX":1,"duration":0.35,"ease":"expo.out"}, 45.099999999999994);
+      tl.fromTo("#d4", {"opacity":1}, {"immediateRender":false,"opacity":0,"duration":0.18}, 46.769999999999996);
+      tl.fromTo("#ask .ln", {"opacity":0,"scaleX":1.35}, {"immediateRender":false,"opacity":1,"scaleX":1,"duration":1,"ease":"power2.out"}, 49.4);
+      tl.fromTo("#ask .ln .r", {"x":-12}, {"immediateRender":false,"x":0,"duration":0.9,"ease":"steps(9)"}, 49.4);
+      tl.fromTo("#ask .ln .c", {"x":12}, {"immediateRender":false,"x":0,"duration":0.9,"ease":"steps(9)"}, 49.4);
+      tl.fromTo("#ask", {"opacity":1}, {"immediateRender":false,"opacity":0,"duration":0.25}, 51.25);
+      tl.fromTo("#dim", {"opacity":0}, {"immediateRender":false,"opacity":0.78,"duration":0.8}, 51.3);
+      tl.fromTo("#scan", {"y":-560,"opacity":1}, {"immediateRender":false,"y":560,"opacity":1,"duration":0.7,"ease":"power1.inOut"}, 51.5);
+      tl.fromTo("#scan", {"opacity":1}, {"immediateRender":false,"opacity":0,"duration":0.2}, 52.2);
+      tl.fromTo("#title .corner", {"scale":1.6,"opacity":0}, {"immediateRender":false,"scale":1,"opacity":1,"duration":0.45,"ease":"expo.out","stagger":0.05}, 51.55);
+      tl.fromTo('#title .slice', { opacity: 1 }, { opacity: 0, duration: 0.01, immediateRender: false }, 52.7);
+      tl.set('#title .slice', { opacity: 1 }, 51.75);
+      tl.set('#title .logo .m', { opacity: 0 }, 51.5);
+      tl.set('#title .logo .m', { opacity: 1 }, 52.7);
+      tl.fromTo('#title .s0', { x: 60 }, { keyframes: [{ x: -40, duration: 0.07 }, { x: 25, duration: 0.07 }, { x: -12, duration: 0.08 }, { x: 0, duration: 0.08 }], immediateRender: false }, 51.75);
+      tl.fromTo('#title .s1', { x: -90 }, { keyframes: [{ x: 70, duration: 0.07 }, { x: -30, duration: 0.07 }, { x: 18, duration: 0.08 }, { x: 0, duration: 0.08 }], immediateRender: false }, 51.87);
+      tl.fromTo('#title .s2', { x: 40 }, { keyframes: [{ x: -60, duration: 0.07 }, { x: 50, duration: 0.07 }, { x: -20, duration: 0.08 }, { x: 0, duration: 0.08 }], immediateRender: false }, 51.99);
+      tl.fromTo('#title .s3', { x: -50 }, { keyframes: [{ x: 30, duration: 0.07 }, { x: -70, duration: 0.07 }, { x: 10, duration: 0.08 }, { x: 0, duration: 0.08 }], immediateRender: false }, 52.11);
+      tl.fromTo("#title .logo .r", {"x":-22,"opacity":0.9}, {"immediateRender":false,"x":-2,"opacity":0.55,"duration":0.95,"ease":"steps(10)"}, 51.75);
+      tl.fromTo("#title .logo .c", {"x":22,"opacity":0.9}, {"immediateRender":false,"x":2,"opacity":0.55,"duration":0.95,"ease":"steps(10)"}, 51.75);
+      tl.fromTo("#title .flare", {"scaleX":0,"opacity":0}, {"immediateRender":false,"scaleX":1,"opacity":1,"duration":0.25,"ease":"expo.out"}, 52.7);
+      tl.fromTo("#title .flare", {"opacity":1}, {"immediateRender":false,"opacity":0.25,"duration":1.8,"ease":"power2.out"}, 52.95);
+      tl.fromTo("#title .rule", {"scaleX":0}, {"immediateRender":false,"scaleX":1,"duration":0.6,"ease":"expo.out"}, 52.75);
+      tl.fromTo("#title .sub", {"clipPath":"inset(0 100% 0 0)"}, {"immediateRender":false,"clipPath":"inset(0 0% 0 0)","duration":0.9,"ease":"steps(18)"}, 53.1);
+      tl.fromTo("#title .tele", {"opacity":0}, {"immediateRender":false,"opacity":0.85,"duration":0.25,"stagger":0.12}, 53.4);
+      tl.fromTo("#title .logo", {"scale":1}, {"immediateRender":false,"scale":1.04,"duration":6.5,"ease":"none"}, 52.7);
+      tl.fromTo('#title .logo .m', { textShadow: '0 0 60px rgba(120,220,255,1), 0 0 18px rgba(255,255,255,1)' }, { textShadow: '0 0 26px rgba(120,220,255,0.55), 0 0 6px rgba(255,255,255,0.6)', duration: 2.2, ease: 'power2.out', immediateRender: false }, 52.7);
+      tl.fromTo("#fade", {"opacity":1}, {"immediateRender":false,"opacity":0,"duration":0.4}, 2.8);
+      tl.fromTo("#fadeout", {"opacity":0}, {"immediateRender":false,"opacity":1,"duration":1.4,"ease":"power1.in"}, 58.5);
+      tl.to('#grain', { backgroundPosition: '173px 97px', duration: 0.08, repeat: 750, ease: 'steps(1)' }, 0);
+      window.__timelines['main'] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>
