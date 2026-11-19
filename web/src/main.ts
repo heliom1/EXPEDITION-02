@@ -1780,29 +1780,53 @@ async function boot(): Promise<void> {
   };
 
   const loop = new GameLoop(SIM_HZ, sim, render);
-  loading.set(0.97, 'Compiling shaders');
   // All on the loading screen: compiling this many programs stalls the page even with parallel compilation.
   await Promise.race([Promise.all([bodyReady, actorReady]), new Promise((r) => setTimeout(r, 20000))]);
   // (the orbital space scene behind the main menu too — its first frame used to compile mid-transition and freeze it).
-  // Done in small batches with a frame in between so the loading screen keeps animating instead of freezing.
-  const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
-  const batches = async (root: Object3D, cam: Camera, target: Scene, linear = false) => {
+  // Work in ~10 ms slices with a frame in between so the loading screen keeps animating instead of freezing. Most
+  // objects share an already-compiled program and cost almost nothing, so slicing by time (not a fixed object count)
+  // finishes in a few dozen frames instead of hundreds. The bar advances through every step so it never sits still.
+  // Background tab / covered window: requestAnimationFrame stops and timers are throttled to 1 per second, which used
+  // to leave the loader stuck at 97% — there the yield uses a MessageChannel (not throttled) instead.
+  const yieldChannel = new MessageChannel();
+  const yieldQueue: (() => void)[] = [];
+  yieldChannel.port1.onmessage = () => yieldQueue.shift()?.();
+  const nextFrame = () => new Promise<void>((r) => {
+    if (document.hidden) { yieldQueue.push(r); yieldChannel.port2.postMessage(0); return; }
+    let done = false; const go = () => { if (!done) { done = true; r(); } };
+    requestAnimationFrame(go); setTimeout(go, 100);
+  });
+  const SLICE_MS = 10;
+  let sliceStart = performance.now();
+  const maybeYield = async () => { if (performance.now() - sliceStart > SLICE_MS) { await nextFrame(); sliceStart = performance.now(); } };
+  /** Runs `work` over `items` in slices, moving the loading bar from `from` to `to`. */
+  const stage = async <T>(items: T[], from: number, to: number, label: string, work: (item: T) => void) => {
+    loading.set(from, label);
+    for (let i = 0; i < items.length; i++) {
+      work(items[i]);
+      if (performance.now() - sliceStart > SLICE_MS) { loading.set(from + ((to - from) * (i + 1)) / items.length, label); await maybeYield(); }
+    }
+    loading.set(to, label);
+  };
+  const drawables = (root: Object3D) => {
     const objs: Object3D[] = [];
     root.traverse((o) => { if ((o as Mesh).isMesh || (o as unknown as { isPoints?: boolean }).isPoints || (o as unknown as { isSprite?: boolean }).isSprite || (o as unknown as { isLine?: boolean }).isLine) objs.push(o); });
-    for (let i = 0; i < objs.length; i += 6) {
-      if (linear) { linearTarget ??= new WebGLRenderTarget(1, 1, { type: HalfFloatType }); renderer.setRenderTarget(linearTarget); }
-      for (const o of objs.slice(i, i + 6)) renderer.compile(o, cam, target);
-      if (linear) renderer.setRenderTarget(null);
-      await nextFrame();
-    }
+    return objs;
   };
-  await batches(scene, camera, scene);
-  await batches(tool.scene, tool.camera, tool.scene);
-  await batches(space.scene, space.camera, space.scene);
-  await batches(scene, camera, scene, true);
-  // A compiled program is still validated (and its uniforms looked up) the first time it draws — over a second for the
-  // whole set on the first visible frame; do it here, a few programs per frame, behind the loading screen.
-  // Upload every texture to the GPU a few per frame (the first frames otherwise upload them all at once).
+  linearTarget ??= new WebGLRenderTarget(1, 1, { type: HalfFloatType });
+  const compileLinear = (o: Object3D) => {
+    const prev = renderer.getRenderTarget();
+    renderer.setRenderTarget(linearTarget);
+    renderer.compile(o, camera, scene);
+    renderer.setRenderTarget(prev);
+  };
+  sliceStart = performance.now();
+  await stage(drawables(space.scene), 0.9, 0.91, 'Compiling shaders', (o) => renderer.compile(o, space.camera, space.scene));
+  await stage(drawables(tool.scene), 0.91, 0.915, 'Compiling shaders', (o) => renderer.compile(o, tool.camera, tool.scene));
+  await stage(drawables(scene), 0.915, 0.94, 'Compiling shaders', (o) => renderer.compile(o, camera, scene));
+  // transmission-pass variants (helmet glass in third-person cutscenes, cave ice): no tone mapping, linear output
+  await stage(drawables(scene), 0.94, 0.955, 'Compiling shaders', compileLinear);
+  // Upload every texture to the GPU (the first frames otherwise upload them all at once).
   const texs = new Set<Texture>();
   for (const root of [scene, space.scene, tool.scene]) root.traverse((o) => {
     const ms = (o as Mesh).material; if (!ms) return;
@@ -1810,10 +1834,10 @@ async function boot(): Promise<void> {
       if ((v as Texture | null)?.isTexture) texs.add(v as Texture);
     }
   });
-  let up = 0;
-  for (const tx of texs) { renderer.initTexture(tx); if (++up % 3 === 0) await nextFrame(); }
-  const progs = renderer.info.programs ?? [];
-  for (let i = 0; i < progs.length; i++) { progs[i].getUniforms(); progs[i].getAttributes(); if (i % 4 === 3) await nextFrame(); }
+  await stage([...texs], 0.955, 0.975, 'Uploading textures', (tx) => renderer.initTexture(tx));
+  // A compiled program is still validated (and its uniforms looked up) the first time it draws — over a second for the
+  // whole set on the first visible frame; do it here, behind the loading screen.
+  await stage(renderer.info.programs ?? [], 0.975, 0.995, 'Starting systems', (pr) => { pr.getUniforms(); pr.getAttributes(); });
   shadersWarmed = true;
   // The menu is revealed underneath while the intro plays its "systems online" exit and dissolves. Start the game loop
   // now and let the menu render a few frames behind the (still opaque) intro, so first-frame costs (texture uploads,
@@ -1821,7 +1845,7 @@ async function boot(): Promise<void> {
   setMode('menu');
   ctx.resize();
   loop.start();
-  await new Promise<void>((r) => { let n = 0; const f = () => (++n >= 12 ? r() : requestAnimationFrame(f)); requestAnimationFrame(f); });
+  for (let n = 0; n < 12; n++) await nextFrame();
   await loading.finish(() => {
     menu.el.classList.add('entering');
     setTimeout(() => menu.el.classList.remove('entering'), 2500);

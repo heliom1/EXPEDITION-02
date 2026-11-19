@@ -4,6 +4,7 @@ import {
   SRGBColorSpace, UnsignedByteType, Vector2, Vector3, WebGLRenderer, WebGLRenderTarget,
 } from 'three';
 import { PALETTE, SUN_DIR } from '../core/config';
+import './lightLoops';
 
 export interface RenderContext {
   renderer: WebGLRenderer;
